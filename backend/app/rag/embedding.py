@@ -1,3 +1,4 @@
+import os
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Protocol
@@ -26,9 +27,18 @@ class SentenceTransformerEmbedder:
         model_revision: str,
         cache_dir: Path,
         local_files_only: bool = False,
+        cpu_threads: int = 1,
     ) -> None:
+        os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+        import torch
         from sentence_transformers import SentenceTransformer
 
+        torch.set_num_threads(cpu_threads)
+        try:
+            torch.set_num_interop_threads(1)
+        except RuntimeError:
+            if torch.get_num_interop_threads() != 1:
+                raise RuntimeError("Torch interop thread configuration is incompatible") from None
         self.model_id = model_id
         self.model_revision = model_revision
         self._model = SentenceTransformer(

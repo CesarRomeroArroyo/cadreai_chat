@@ -343,6 +343,7 @@ Core ingestion checkpoint evidence recorded on 2026-09-11:
 - Added HTTPS host allowlisting, credential/port rejection, public-address checks, bounded redirects, response-size limits, and explicit content-type handling. DNS rebinding remains a documented residual risk.
 - Pinned `BAAI/bge-small-en-v1.5` revision `5c38ec7c405ec4b44b94cc5a9bb96e735b38267a`; real local smoke produced one normalized 384-dimensional vector and a one-source/one-chunk FAISS snapshot.
 - Pinned CPU-only Torch for Linux deployment to avoid CUDA dependency downloads while retaining the native macOS wheel for development.
+- Real threadpool integration initially hung during embedding on macOS. Explicit bounded Torch intra-op and inter-op configuration resolved it; repeated cross-thread model load, extraction, embedding, FAISS activation, and source listing completed successfully.
 - `uv lock --project backend` and `uv sync --project backend --extra dev`: passed.
 - `backend/.venv/bin/ruff check backend`: passed.
 - `backend/.venv/bin/ruff format --check backend`: passed for 26 Python files.

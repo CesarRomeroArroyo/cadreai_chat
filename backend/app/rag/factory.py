@@ -10,6 +10,7 @@ def create_knowledge_service(settings: Settings) -> KnowledgeService:
         model_revision=settings.embedding_model_revision,
         cache_dir=settings.embedding_cache_dir,
         local_files_only=settings.embedding_local_files_only,
+        cpu_threads=settings.embedding_cpu_threads,
     )
     if embedder.dimension != settings.embedding_dimension:
         raise RuntimeError(

@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     embedding_model_revision: str = "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a"
     embedding_local_files_only: bool = False
     embedding_dimension: int = Field(default=384, ge=1)
+    embedding_cpu_threads: int = Field(default=1, ge=1, le=4)
     chunk_tokens: int = Field(default=384, ge=1)
     chunk_overlap: int = Field(default=64, ge=0)
     knowledge_allowed_hosts: list[str] = Field(default_factory=lambda: ["cadreai.com"])
