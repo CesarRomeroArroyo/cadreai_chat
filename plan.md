@@ -351,6 +351,19 @@ Core ingestion checkpoint evidence recorded on 2026-09-11:
 - CLI help, empty-manifest `sync`, and empty-index `list` were exercised using cached model files with `EMBEDDING_LOCAL_FILES_ONLY=true`.
 - Remaining Phase 3 scope: bounded multi-file validation, administrator authentication/session/origin controls, protected knowledge APIs, responsive `/knowledge` UI, integration tests, and deployment.
 
+Protected knowledge API checkpoint evidence recorded on 2026-09-11:
+- Added fail-closed environment-backed administrator credentials and independent HMAC-SHA256 session signing; weak or missing configuration returns service unavailable without exposing configured values.
+- Added short-lived `HttpOnly`, configurable `Secure`, `SameSite=Strict` cookies scoped to knowledge APIs, constant-time password verification, bounded per-client login attempts, and bounded limiter tracking memory.
+- Added exact configured-origin validation for login and every mutation plus credentialed exact-origin CORS support.
+- Added authenticated session/source reads, multi-file ingestion, batch URL ingestion, source deletion, rebuild, and logout endpoints.
+- Added backend-enforced request, file-count, per-file, aggregate-upload, URL-count, URL-response, field-length, MIME, decodability, and approval-confirmation bounds. Streamed/chunked request bytes are counted independently of `Content-Length`.
+- Mixed batch results preserve submitted order and report per-source indexed, updated, unchanged, duplicate, or error state; source mutations execute off the event loop and reuse one process-level service lock.
+- Updated deployment templates for persistent model/index paths, local-files-only startup, administrator secrets, credential cookies, and a 21 MiB Nginx request cap. No deployment occurred in this checkpoint.
+- `backend/.venv/bin/ruff check backend` and `backend/.venv/bin/ruff format --check backend`: passed for 31 Python files.
+- `backend/.venv/bin/mypy backend/app backend/tests`: strict check passed for 31 Python files.
+- `backend/.venv/bin/pytest backend/tests`: 29 tests passed without warnings or external API calls.
+- Remaining Phase 3 scope: responsive `/knowledge` UI, frontend/API integration tests, full regression verification, credential generation on the Droplet, model/index provisioning, deployment, and public validation.
+
 ### Phase 4 — Retrieval, provider adapter, and grounded chat API
 
 **Status:** pending

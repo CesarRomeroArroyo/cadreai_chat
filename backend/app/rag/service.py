@@ -46,6 +46,13 @@ def _content_filename(source_id: str) -> str:
     return f"contents/{safe_name}.json"
 
 
+def validate_source_id(source_id: str) -> None:
+    if not SOURCE_ID_RE.fullmatch(source_id):
+        raise IngestionError(
+            "Source IDs must use 1-128 letters, numbers, dots, dashes, or underscores"
+        )
+
+
 class KnowledgeService:
     def __init__(
         self,
@@ -135,10 +142,8 @@ class KnowledgeService:
         source_ids = [source.source_id for source in prepared_sources]
         if len(source_ids) != len(set(source_ids)):
             raise IngestionError("Ingestion batch contains duplicate source IDs")
-        if any(not SOURCE_ID_RE.fullmatch(source_id) for source_id in source_ids):
-            raise IngestionError(
-                "Source IDs must use 1-128 letters, numbers, dots, dashes, or underscores"
-            )
+        for source_id in source_ids:
+            validate_source_id(source_id)
         if not self._mutation_lock.acquire(blocking=False):
             raise IngestionError("Another ingestion operation is already running")
         try:
