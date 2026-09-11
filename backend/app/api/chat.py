@@ -21,6 +21,7 @@ from app.generation.service import GroundedChatService, HistoryTurn
 
 router = APIRouter(prefix="/api/v1", tags=["chat"])
 logger = logging.getLogger("cadre.chat")
+logger.setLevel(logging.INFO)
 
 
 class HistoryMessage(BaseModel):
