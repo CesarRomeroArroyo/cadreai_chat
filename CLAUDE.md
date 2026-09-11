@@ -36,7 +36,7 @@ This file is the project-level operating contract for AI-assisted development. K
 - Production generation: OpenRouter using the challenge key. Production must not require or fall back to the personal OpenAI key.
 - Retrieval: local embeddings plus a persisted local vector index. Embedding and retrieval must not call OpenAI or OpenRouter.
 - Storage: files only for the initial version. Do not add a relational database. If later evidence requires one, document the reason and use MySQL only after approval.
-- Deployment target: the user's existing DigitalOcean Droplet. Serve the built frontend and reverse-proxy FastAPI through the host's existing web server where safe; run Uvicorn under systemd and persist model/index data on the Droplet filesystem. No Dockerfile.
+- Deployment target: the user's existing DigitalOcean Droplet through SSH alias `digitalocean`. Serve the locally built frontend with existing Nginx, reverse-proxy FastAPI to unused localhost port `8010`, run one Uvicorn worker under systemd, and persist model/index data on the Droplet filesystem. Use a dedicated nip.io hostname initially and no Dockerfile.
 
 ## Target Repository Layout
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-- Current stage: Phase 1 complete; stopped before Phase 2
+- Current stage: Phase 2 infrastructure audit complete; deployment changes pending explicit authorization
 - Implementation authorization: Phase 1 authorized on 2026-09-10
 - Dependencies installed: yes, frontend and Phase 1 backend development dependencies
 - Models downloaded: no
@@ -10,7 +10,7 @@
 - Deployment created: no
 - Public URL: not available
 - Last updated: 2026-09-10
-- Deployment target revised: existing DigitalOcean Droplet; exact host and domain confirmation pending
+- Deployment target: SSH alias `digitalocean`; initial public hostname `cadre-ai.<droplet-ip>.nip.io`
 
 ## Inputs Reviewed
 
@@ -180,10 +180,11 @@ FastAPI
 
 ### Selected target
 
-- **Host:** the user's existing DigitalOcean Droplet. SSH config currently exposes candidate alias `digitalocean`; confirm it once before the first deployment.
+- **Host:** the user's existing DigitalOcean Droplet through SSH alias `digitalocean`; connectivity verified on 2026-09-10.
+- **Initial hostname:** `cadre-ai.<droplet-ip>.nip.io`. nip.io resolution to the Droplet was verified and matches existing host deployment conventions. This avoids waiting for external DNS configuration; a custom domain can replace it later.
 - **Frontend:** build the Vite application and serve immutable static assets from a versioned release directory such as `/opt/cadre-ai/releases/<revision>/frontend/dist`.
-- **Backend:** install the FastAPI application in the same versioned release, run one Uvicorn worker as a dedicated non-login service user under systemd, and bind only to `127.0.0.1`.
-- **Public routing:** reuse the host's existing Nginx or Caddy installation when compatible. Serve the frontend at the selected domain and reverse-proxy `/api/`, `/health`, and `/ready` to Uvicorn. Do not replace unrelated host configuration.
+- **Backend:** install the FastAPI application in the same versioned release, run one Uvicorn worker as a dedicated non-login service user under systemd, and bind only to unused `127.0.0.1:8010`.
+- **Public routing:** add one isolated site to the host's existing Nginx installation. Serve the frontend at the selected hostname and reverse-proxy `/api/`, `/health`, and `/ready` to Uvicorn. Do not replace unrelated host configuration.
 - **Persistent state:** keep model cache and RAG artifacts outside release directories under `/var/lib/cadre-ai`; releases can change without deleting runtime data.
 - **Secrets:** store production environment values outside Git under `/etc/cadre-ai/backend.env`, readable only by root and the service account.
 - **Why:** one existing machine avoids platform subscriptions, supports local model/index persistence, keeps frontend and API on one origin, and works without Docker.
@@ -197,7 +198,20 @@ FastAPI
 - Deployment should use versioned releases and an atomic `current` symlink so rollback does not require rebuilding files in place.
 - One-worker in-memory rate limiting is only an MVP control; it resets on restart and does not coordinate across replicas.
 - Source updates on persistent storage need an explicit operational command or controlled redeploy; there is no admin UI.
-- Host alias/IP, domain/subdomain, deployment path, and permission to modify web-server/systemd configuration must be confirmed once before first deployment.
+- Host alias, initial nip.io hostname, deployment paths, and localhost port are selected. Permission for the listed web-server/systemd changes remains required before first deployment.
+
+### Read-only host audit — 2026-09-10
+
+- Connectivity to SSH alias `digitalocean` succeeded; raw host details remain outside repository documentation.
+- Host runs Ubuntu 22.04 LTS on x86-64 with 4 vCPUs, 7.8 GiB RAM, 4 GiB swap, and approximately 47 GiB free disk.
+- No failed systemd units were present during inspection.
+- Existing Nginx 1.18 serves multiple applications on ports 80/443; configuration test passed before any Cadre AI changes.
+- Certbot and its renewal timer are installed and active. Existing nip.io certificates demonstrate a compatible HTTPS path.
+- UFW is active. Cadre AI needs no new public application port because Nginx will proxy to localhost.
+- Port `8010` was unused during inspection and is selected for Uvicorn. Recheck immediately before deployment to avoid a race.
+- Host Python is 3.10 and no global Node executable is available. Build frontend locally; provision isolated Python 3.12 for backend instead of changing system Python.
+- MySQL, Redis, PM2, and several unrelated applications already run on the host. Cadre AI will not use or modify them.
+- Preliminary capacity is adequate for the Phase 2 skeleton and proposed small embedding model, but production memory must be measured after model loading.
 
 ## Sequential Phases
 
@@ -247,7 +261,7 @@ Verification evidence recorded on 2026-09-10:
 
 ### Phase 2 — Early public deployment skeleton
 
-**Status:** pending
+**Status:** in progress — infrastructure audit complete; no deployment or configuration changes made
 
 Deliverables:
 - Confirm the exact DigitalOcean host, domain/subdomain, and allowed configuration changes.
@@ -410,9 +424,9 @@ Each case will identify expected source IDs or `must_abstain: true`. Retrieval m
 
 ## Pending Decisions Required Before Relevant Phases
 
-1. **Deployment destination:** confirm whether SSH alias `digitalocean` is the approved Droplet, provide the intended domain/subdomain, and authorize the specific web-server/systemd changes before Phase 2. Keep raw host details outside repository documentation.
+1. **Remote changes:** authorize creation of the dedicated service account, `/opt/cadre-ai`, `/var/lib/cadre-ai`, `/etc/cadre-ai/backend.env`, one systemd unit, one isolated Nginx site, and a Certbot certificate for `cadre-ai.<droplet-ip>.nip.io`. Existing application configurations will not be edited.
 2. **Official source allowlist:** approve the exact Cadre AI URLs after they are researched and proposed in Phase 3; no URL will be indexed merely because it appears in chat.
 3. **Production model:** confirm an OpenRouter model available to the challenge key after pricing/access review, before Phase 7.
 4. **Secrets:** provide development and production keys only through local/platform environment configuration when their phases begin; never send them for inclusion in files.
 
-Phase 1 is complete. Decision 1 is required before Phase 2 changes the host. Remaining decisions can wait until their listed phases.
+Phase 2 host selection and read-only audit are complete. Decision 1 is required before any remote mutation. Remaining decisions can wait until their listed phases.
