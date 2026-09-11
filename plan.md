@@ -2,12 +2,12 @@
 
 ## Status
 
-- Current stage: Phase 4 completed; Phase 5 pending authorization
-- Implementation authorization: Phases 1–4 authorized; push to `origin/master` authorized after each logical commit
+- Current stage: Phase 5 completed; Phase 6 pending authorization
+- Implementation authorization: Phases 1–5 authorized; push to `origin/master` authorized after each logical commit
 - Dependencies installed: yes, frontend, backend development, and production dependencies
 - Models downloaded: yes, pinned embedding model on the production host
 - External APIs called: Hugging Face model download only; no generation-provider API calls
-- Deployment created: yes, reversible Phase 3 deployment on DigitalOcean
+- Deployment created: yes, reversible Phase 5 deployment on DigitalOcean
 - Public URL: `https://cadre-ai.164.90.135.146.nip.io`
 - Last updated: 2026-09-11
 - Deployment target: SSH alias `digitalocean`; initial public hostname `cadre-ai.<droplet-ip>.nip.io`
@@ -449,7 +449,7 @@ Production deployment evidence recorded on 2026-09-11:
 
 ### Phase 5 — Chat interface and integrated flow
 
-**Status:** pending
+**Status:** complete
 
 Deliverables:
 - Responsive English chat UI with session history, composer, submit, reset, loading, errors, abstention messaging, and per-response sources.
@@ -461,6 +461,20 @@ Acceptance:
 - Frontend does not contain provider secrets or direct provider calls.
 - Responsive and accessibility checks pass at agreed MVP level.
 - `plan.md` updated and phase committed.
+
+Completion evidence recorded on 2026-09-11:
+- Added a typed same-origin chat client and responsive public interface with session-only history, bounded follow-ups, keyboard submission, reset, loading, retryable safe errors, explicit abstention, and per-answer source cards.
+- Citation tokens remain in backend history for grounded follow-ups but are removed from displayed answers. Success responses receive runtime shape validation, and rendered source links accept HTTPS URLs only.
+- Added accessible labels, live conversation updates, busy state, focused assertive errors, visible focus treatment, 44-pixel controls, and mobile-specific layout behavior.
+- Frontend lint, nine Vitest tests, strict TypeScript, and the production Vite build passed. React Doctor reported 100/100 with no findings.
+- Desktop and 375-by-812 mobile browser checks covered initial, populated, loading, source, abstention, error, retry, and reset states. A mobile composer overlap found during inspection was fixed before deployment.
+- Local and public mobile Lighthouse audits each scored 100 for accessibility, best practices, and SEO, with no failed audits. Browser console checks reported no warnings or errors after the favicon was added.
+- Commit `23b6f93` was packaged and isolated-smoke-tested before activation. The smoke test passed health, readiness, empty-evidence abstention, and frontend artifact checks without a generation-provider request.
+- Deployed immutable release `/opt/cadre-ai/releases/20260911182038-23b6f93`; `previous` points to `/opt/cadre-ai/releases/20260911172909-534d57f`.
+- Public HTTPS health/readiness and browser-to-backend chat passed. With the valid empty index and disabled provider, an unrelated question returned the expected bounded abstention, and new-conversation reset restored the initial UI.
+- Rollback from `23b6f93` to `534d57f` and back passed health/readiness. Final services were active with zero automatic backend restarts, approximately 343 MiB backend memory, no failed units, and no recent warning-level backend logs.
+- Initial extraction and dependency-sync commands used incorrect wrapper, cache ownership, and interpreter assumptions; each failed before activation. Paths were corrected, release smoke tests passed, and the active release remained unchanged until the verified atomic switch.
+- Temporary host archive and smoke files were removed. No OpenAI/OpenRouter request or paid API call occurred.
 
 ### Phase 6 — Evaluation and hardening
 
@@ -555,4 +569,4 @@ Each case will identify expected source IDs or `must_abstain: true`. Retrieval m
 1. **Production model:** confirm an OpenRouter model available to the challenge key after pricing/access review, before Phase 7.
 2. **Generation secrets:** administrator credentials are configured on the Droplet; generation-provider keys are provided only through backend environment configuration in their later phase.
 
-Phase 4 is complete. Phase 5 requires explicit authorization before implementation. Individual web sources become approved only through the authenticated administrator workflow and must remain within configured Cadre AI domains. Remaining decisions can wait until their listed phases.
+Phase 5 is complete. Phase 6 requires explicit authorization before implementation. Individual web sources become approved only through the authenticated administrator workflow and must remain within configured Cadre AI domains. Remaining decisions can wait until their listed phases.

@@ -4,9 +4,9 @@ Grounded customer support chatbot for Cadre AI. The application uses a React/Vit
 
 ## Current status
 
-Phase 4 is complete. Retrieval, readiness, grounded chat orchestration, and the OpenAI-compatible
-provider adapter are implemented, tested, and deployed. The interactive chat UI, approved production
-sources, and production generation credentials remain pending.
+Phase 5 is complete. Retrieval, grounded chat orchestration, the OpenAI-compatible provider adapter,
+and the responsive public chat UI are implemented, tested, and deployed. Approved production sources
+and production generation credentials remain pending, so the public chat currently abstains.
 
 Public deployment: <https://cadre-ai.164.90.135.146.nip.io>
 
@@ -65,7 +65,7 @@ cached pinned embedding model and synthetic fixtures that are never added to pro
 
 ## Deployment
 
-The current application foundation runs on the existing DigitalOcean Droplet without Docker:
+The current application runs on the existing DigitalOcean Droplet without Docker:
 
 - Nginx serves the static frontend and proxies backend routes.
 - One systemd-managed Uvicorn worker listens only on `127.0.0.1:8010`.
