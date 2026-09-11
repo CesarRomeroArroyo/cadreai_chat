@@ -2,12 +2,12 @@
 
 ## Status
 
-- Current stage: Phase 5 completed; Phase 6 pending authorization
-- Implementation authorization: Phases 1–5 authorized; push to `origin/master` authorized after each logical commit
+- Current stage: Phase 6 completed; Phase 7 pending authorization
+- Implementation authorization: Phases 1–6 authorized; push to `origin/master` authorized after each logical commit
 - Dependencies installed: yes, frontend, backend development, and production dependencies
 - Models downloaded: yes, pinned embedding model on the production host
 - External APIs called: Hugging Face model download only; no generation-provider API calls
-- Deployment created: yes, reversible Phase 5 deployment on DigitalOcean
+- Deployment created: yes, reversible Phase 6 deployment on DigitalOcean
 - Public URL: `https://cadre-ai.164.90.135.146.nip.io`
 - Last updated: 2026-09-11
 - Deployment target: SSH alias `digitalocean`; initial public hostname `cadre-ai.<droplet-ip>.nip.io`
@@ -478,7 +478,7 @@ Completion evidence recorded on 2026-09-11:
 
 ### Phase 6 — Evaluation and hardening
 
-**Status:** pending
+**Status:** complete
 
 Deliverables:
 - Versioned retrieval dataset with expected sources and abstentions.
@@ -491,6 +491,20 @@ Acceptance:
 - Similarity thresholds are calibrated from examples, not described as probabilities.
 - Automated suite uses fake provider unless real-test flag is explicitly supplied.
 - `plan.md` updated and phase committed.
+
+Completion evidence recorded on 2026-09-11:
+- Added a separate seven-case generated-answer dataset and deterministic fake-provider runner covering valid citations, follow-up context, uncited answers, fabricated citations, model-generated URL removal, no-evidence abstention, trusted source mapping, and escaped prompt-injection content. All 7/7 cases passed without network or model calls.
+- Re-ran the independent real-embedding retrieval evaluation in local-files-only mode. All 7/7 cases passed at the provisional `0.7` floor, with unchanged scores after dependency hardening. Production calibration remains blocked on approved production content and is explicitly documented rather than represented as complete confidence calibration.
+- Expanded integrated FastAPI-to-retrieval-to-provider tests for bounded recent history, score/context budgets, all provider error categories, safe envelopes, citations, and source metadata. Backend suite increased from 49 to 58 passing tests; frontend remained at nine passing tests.
+- Removed traceback logging for unexpected chat exceptions because exception messages can contain user or provider data. Unknown failures now emit only the existing structured `internal_error` event and a safe client envelope; regression coverage proves sensitive exception text is absent from response and logs.
+- Upgraded pinned PyTorch CPU/macOS builds from `2.5.1` to `2.14.0`. The initial locked production audit found 22 advisories in PyTorch 2.5.1; the updated fully pinned dependency audit found no known vulnerabilities. Frontend production audit also found no known vulnerabilities.
+- Confirmed local and production model caches contain no `.bin`, `.pt`, `.pth`, `.pkl`, or `.pickle` files. The application loads the immutable BGE revision from local safetensors and administrator knowledge operations cannot modify model directories.
+- Full verification passed: frozen lock resolution, Ruff, formatting, strict mypy for application/tests/evaluation runners, 58 backend tests, frontend lint, nine frontend tests, strict TypeScript/Vite build, retrieval evaluation 7/7, and generated-answer evaluation 7/7.
+- First generated-answer run passed 6/7 because a retrieval-query prefix was incorrectly expected in the provider prompt; query and prompt assertions were separated, then all cases passed. A frontend verification command initially used a duplicated working directory and executed no checks; the corrected command passed. Initial `pip-audit` resolution aborted in uv-managed `ensurepip`; the fully pinned export was then audited with dependency resolution disabled and passed.
+- Deployed immutable release `/opt/cadre-ai/releases/20260911205722-2152fe0` with `torch 2.14.0+cpu`; `previous` points to `/opt/cadre-ai/releases/20260911182038-23b6f93`.
+- Isolated smoke and public HTTPS checks passed health, readiness, and prompt-injection abstention with the empty index and disabled provider. Rollback to `23b6f93` and back to `2152fe0` passed.
+- Final Nginx and `cadre-ai.service` state was active with zero automatic backend restarts, approximately 380 MiB backend memory, no failed units, and no recent warning-level backend logs. Temporary host archive and smoke files were removed.
+- No OpenAI/OpenRouter request or paid API call occurred. Remaining production model and approved-source work belongs to Phase 7.
 
 ### Phase 7 — Production model validation and final deployment
 
@@ -569,4 +583,4 @@ Each case will identify expected source IDs or `must_abstain: true`. Retrieval m
 1. **Production model:** confirm an OpenRouter model available to the challenge key after pricing/access review, before Phase 7.
 2. **Generation secrets:** administrator credentials are configured on the Droplet; generation-provider keys are provided only through backend environment configuration in their later phase.
 
-Phase 5 is complete. Phase 6 requires explicit authorization before implementation. Individual web sources become approved only through the authenticated administrator workflow and must remain within configured Cadre AI domains. Remaining decisions can wait until their listed phases.
+Phase 6 is complete. Phase 7 requires explicit authorization before implementation, including explicit approval of the OpenRouter model and strict real-provider test budget. Individual web sources become approved only through the authenticated administrator workflow and must remain within configured Cadre AI domains.
