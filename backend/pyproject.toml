@@ -18,8 +18,8 @@ dependencies = [
   "python-multipart>=0.0.20,<1",
   "pyyaml>=6,<7",
   "sentence-transformers>=5,<6",
-  "torch==2.5.1; sys_platform == 'darwin'",
-  "torch==2.5.1+cpu; sys_platform == 'linux'",
+  "torch==2.14.0; sys_platform == 'darwin'",
+  "torch==2.14.0+cpu; sys_platform == 'linux'",
   "uvicorn[standard]>=0.35,<1",
 ]
 
