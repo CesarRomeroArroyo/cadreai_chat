@@ -1,6 +1,19 @@
+import { lazy, Suspense } from 'react'
+
 import './App.css'
 
+const KnowledgePage = lazy(() => import('./KnowledgePage'))
+
 function App() {
+  const path = window.location.pathname.replace(/\/+$/, '') || '/'
+  if (path === '/knowledge') {
+    return (
+      <Suspense fallback={<main className="app-shell">Loading knowledge console…</main>}>
+        <KnowledgePage />
+      </Suspense>
+    )
+  }
+
   return (
     <main className="app-shell">
       <header className="app-header">

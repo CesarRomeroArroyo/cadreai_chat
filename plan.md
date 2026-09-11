@@ -365,6 +365,20 @@ Protected knowledge API checkpoint evidence recorded on 2026-09-11:
 - `backend/.venv/bin/pytest backend/tests`: 29 tests passed without warnings or external API calls.
 - Remaining Phase 3 scope: responsive `/knowledge` UI, frontend/API integration tests, full regression verification, credential generation on the Droplet, model/index provisioning, deployment, and public validation.
 
+Protected knowledge UI checkpoint evidence recorded on 2026-09-11:
+- Added lazy-loaded `/knowledge` routing without adding a routing dependency; public chat shell remains the default route and local Vite development proxies `/api` to FastAPI.
+- Added responsive English login and administration experiences using the existing Cadre AI visual language, with file drag-and-drop plus keyboard-accessible selection, URL batching, explicit official-source confirmation, ordered operation results, source metadata, two-step deletion, rebuild, and logout.
+- Password input permits paste and password managers. Errors use a focused `role="alert"`; status updates use live regions; forms have explicit labels, visible focus, disabled states, and reduced-motion handling.
+- Frontend API client uses same-origin credentialed requests and contains no administrator or provider secrets.
+- `pnpm --dir frontend lint`: passed without warnings.
+- `pnpm --dir frontend test`: four tests passed across two files, covering support-shell isolation, unauthenticated login, focused login errors, approved upload, operation feedback, and source refresh.
+- `pnpm --dir frontend build`: strict TypeScript and Vite production build passed.
+- React Doctor full scan scored 100/100 with no findings.
+- Local desktop and 375 px mobile visual checks passed for login and populated console states. Accessibility snapshots exposed expected headings, labels, pressed/disabled states, live feedback, and confirmation controls; Lighthouse snapshot scored 100 accessibility, 100 best practices, and 100 SEO.
+- Real browser-to-Vite-to-FastAPI integration used the cached pinned BGE model and a temporary index: login, authenticated source listing, TXT upload, embedding/FAISS activation, source refresh, rebuild, two-step deletion, and logout all succeeded. Final browser console contained no warnings or errors, and backend remained healthy.
+- Temporary source/index and local processes were removed or stopped. No production deployment or generation-provider API call occurred.
+- Remaining Phase 3 scope: full regression verification, production credential generation, model cache provisioning, deployment, public API/UI validation, and final Phase 3 status update.
+
 ### Phase 4 — Retrieval, provider adapter, and grounded chat API
 
 **Status:** pending

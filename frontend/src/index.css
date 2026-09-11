@@ -10,6 +10,9 @@
   --color-accent-strong: #8a5e00;
   --color-positive: #2f7e53;
   --color-disabled: #8c887f;
+  --color-danger: #9f3526;
+  --color-accent-soft: #f6e9be;
+  --color-paper-deep: #ebe5d7;
   --shadow-soft: 0 1rem 3rem rgb(45 39 27 / 7%);
 
   color: var(--color-ink);
@@ -37,13 +40,16 @@ body {
 }
 
 button,
+input,
 textarea {
   font: inherit;
 }
 
 button:focus-visible,
 a:focus-visible,
-textarea:focus-visible {
+input:focus-visible,
+textarea:focus-visible,
+label[for]:focus-visible {
   outline: 0.18rem solid var(--color-accent-strong);
   outline-offset: 0.2rem;
 }
