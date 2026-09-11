@@ -2,8 +2,8 @@
 
 ## Status
 
-- Current stage: Phase 2 complete; stopped before Phase 3
-- Implementation authorization: Phases 1 and 2 authorized; Phase 3 pending
+- Current stage: Phase 3 in progress
+- Implementation authorization: Phases 1–3 authorized; push to `origin/master` authorized after each logical commit
 - Dependencies installed: yes, frontend and Phase 1 backend development dependencies
 - Models downloaded: no
 - External APIs called: no
@@ -132,7 +132,8 @@ FastAPI
 ### Inputs
 
 - URL entries from `backend/data/sources.yaml`, each with an explicit stable source ID and approved official Cadre AI URL.
-- Markdown, TXT, and text-extractable PDF files from `backend/data/documents/`; stable file IDs derive from normalized relative paths.
+- Authenticated administrator URL submissions restricted to configured official Cadre AI hostnames; each submission requires explicit approval confirmation.
+- Markdown, TXT, and text-extractable PDF files from `backend/data/documents/` or the protected multi-file upload form; stable file IDs derive from normalized filenames while hashes detect unchanged or duplicate content.
 - Challenge PDF and development files are explicitly excluded.
 
 ### Pipeline
@@ -155,6 +156,14 @@ FastAPI
 - `remove --source-id ID`: remove source and all chunks, then rebuild derived index.
 - `rebuild`: regenerate every embedding and index artifact, required after incompatible model/config changes.
 - Exact executable syntax remains provisional until Phase 1 creates backend packaging and Phase 3 verifies commands.
+
+### Protected knowledge page
+
+- `/knowledge` presents a login screen, then a responsive administration workspace.
+- Authentication uses one environment-configured password and a separately signed, short-lived secure session cookie; no relational user store is added.
+- The page supports drag-and-drop or selection of multiple approved files, one or more allowlisted HTTPS URLs, upload review/removal, progress/error feedback, source listing, replacement, deletion, and index rebuild.
+- Backend endpoints enforce authentication, origin validation, file and request bounds, content checks, URL/domain policy, redirect validation, and serialized ingestion independently of frontend behavior.
+- Source content, canonical metadata, vectors, and FAISS index are written to versioned snapshots. A symlink swap activates a complete validated snapshot atomically; failures leave the previous snapshot active.
 
 ## Retrieval and Answer Strategy
 
@@ -298,13 +307,15 @@ Verification evidence recorded on 2026-09-11:
 
 ### Phase 3 — Idempotent ingestion and local index
 
-**Status:** pending
+**Status:** in progress
 
 Deliverables:
 - Approved source manifest and document directory rules.
 - Extractors for HTML, Markdown, TXT, and text PDFs.
 - Cleaning, metadata preservation, token-aware chunking, local embeddings, persistent FAISS artifacts, and CLI operations.
 - Model/config compatibility metadata and atomic artifact replacement.
+- Environment-backed administrator authentication, secure session cookie, login rate limiting, and mutation-origin validation.
+- Protected knowledge APIs and `/knowledge` page for multiple files, allowlisted URLs, source listing, replacement/removal, and rebuild.
 
 Acceptance:
 - Unchanged sync creates no duplicate source/chunk records.
@@ -313,6 +324,12 @@ Acceptance:
 - Rebuild works from approved sources.
 - Download failure, empty file, and textless PDF produce explicit errors.
 - Challenge PDF cannot enter knowledge index.
+- Unauthenticated source reads and mutations are rejected.
+- File count, per-file size, aggregate size, extension, MIME, signature/decodability, and approval confirmation are validated in the backend.
+- URL ingestion accepts only configured HTTPS Cadre AI hosts and rejects unsafe ports, addresses, redirects, and response types.
+- Multiple-file upload reports per-source success, unchanged, duplicate, or error status without corrupting the active index.
+- Administrator can list, replace, delete, and rebuild sources through the responsive web page.
+- Normal automated tests use fake embeddings and local fixtures; no generation-provider API is called.
 - `plan.md` updated and phase committed.
 
 ### Phase 4 — Retrieval, provider adapter, and grounded chat API
@@ -440,8 +457,7 @@ Each case will identify expected source IDs or `must_abstain: true`. Retrieval m
 
 ## Pending Decisions Required Before Relevant Phases
 
-1. **Official source allowlist:** approve the exact Cadre AI URLs after they are researched and proposed in Phase 3; no URL will be indexed merely because it appears in chat.
-2. **Production model:** confirm an OpenRouter model available to the challenge key after pricing/access review, before Phase 7.
-3. **Secrets:** provide development and production keys only through local/platform environment configuration when their phases begin; never send them for inclusion in files.
+1. **Production model:** confirm an OpenRouter model available to the challenge key after pricing/access review, before Phase 7.
+2. **Secrets:** production administrator credentials will be generated directly on the Droplet during Phase 3 deployment; generation-provider keys are provided only through local/platform environment configuration in their later phase.
 
-Phase 2 is complete. Phase 3 requires source research and explicit approval of the resulting allowlist before ingestion. Remaining decisions can wait until their listed phases.
+Phase 3 is authorized. Individual web sources become approved only through the authenticated administrator workflow and must remain within configured Cadre AI domains. Remaining decisions can wait until their listed phases.

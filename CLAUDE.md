@@ -112,8 +112,8 @@ Replace provisional ingestion flags if implementation chooses a different valid 
 
 ### Allowed sources
 
-- Preselected official Cadre AI web pages in `backend/data/sources.yaml`.
-- Approved Markdown, TXT, and text-extractable PDF files under `backend/data/documents/`.
+- Preselected official Cadre AI web pages in `backend/data/sources.yaml` and URLs submitted by an authenticated administrator from explicitly allowed Cadre AI domains.
+- Approved Markdown, TXT, and text-extractable PDF files under `backend/data/documents/` or uploaded through the protected knowledge page.
 - Every source must have a stable ID, title, canonical URL or relative filename, retrieval timestamp, content hash, and extraction status.
 - Preserve page numbers, headings, and sections where extraction permits.
 
@@ -125,7 +125,7 @@ Replace provisional ingestion flags if implementation chooses a different valid 
 
 ### Ingestion behavior
 
-- Download URLs only from the allowlisted manifest and only during explicit ingestion commands.
+- Download URLs only from the allowlisted manifest or authenticated knowledge workflow, only when their normalized hostname is allowed. Never accept URL ingestion from the public chat.
 - Normalize text conservatively while retaining headings and page boundaries.
 - Chunk by document structure, with a target maximum of 384 embedding-model tokens and 64-token overlap. This fits the selected encoder's context window, limits boundary loss, and keeps passages focused. Validate this choice with retrieval evaluation rather than treating it as fixed truth.
 - Generate stable chunk IDs from source ID, source content hash, location, and normalized chunk content.
@@ -135,6 +135,17 @@ Replace provisional ingestion flags if implementation chooses a different valid 
 - Write generated artifacts to a temporary location and atomically replace active artifacts only after successful validation.
 - Report download failures, unsupported types, empty documents, PDFs without extractable text, and index/model incompatibility with non-zero exit status.
 - Never download a model or rebuild an index while serving a chat request.
+
+### Protected knowledge management
+
+- Expose `/knowledge` as a public-route login screen and authenticated administration page; all data and mutation APIs remain protected in the backend.
+- Use one environment-configured administrator password and a separate session-signing secret. Never expose either through `VITE_*`, source code, logs, or API responses.
+- Authenticate with a short-lived, signed, `HttpOnly`, `Secure`, `SameSite=Strict` cookie. Apply login rate limiting and validate same-origin requests for state-changing operations.
+- Allow multiple Markdown, TXT, and text-extractable PDF files per bounded multipart request. Validate extension, declared MIME type, content signature/decodability, individual size, aggregate size, and file count.
+- Allow HTTPS URLs only from configured official Cadre AI hostnames. Reject credentials, non-default ports, localhost, private/reserved addresses, unsafe redirects, and disallowed response content types. Domain allowlisting reduces SSRF risk but does not guarantee protection against DNS rebinding.
+- Require explicit administrator confirmation that submitted material is official and approved.
+- List sources with status and metadata; support add/update, delete, and full rebuild. Preserve the CLI as an operational fallback.
+- Serialize ingestion work in one process. Keep the previous index active until a complete replacement snapshot validates and is atomically activated.
 
 ## Local Embeddings and Vector Index
 
@@ -218,4 +229,6 @@ CHAT_CONTEXT_TOKEN_BUDGET=
 
 Included: English responsive chat UI, session-only history, new-conversation reset, loading/error states, source cards, bounded follow-ups, local RAG, source-management CLI, provider configuration, tests, evaluation, and public deployment.
 
-Excluded: authentication, persisted chats, relational database, admin ingestion UI, CRM/ticket/calendar actions, streaming unless schedule permits, OCR, multilingual behavior, analytics platform, distributed rate limiting, reranking model, autonomous browsing, and arbitrary user URL ingestion.
+Also included: protected administrator authentication and a responsive `/knowledge` page for bounded multi-file and allowlisted URL ingestion, source replacement/removal, and index rebuild.
+
+Excluded: end-user authentication, persisted chats, relational database, CRM/ticket/calendar actions, streaming unless schedule permits, OCR, multilingual behavior, analytics platform, distributed rate limiting, reranking model, autonomous browsing, and arbitrary-domain or public-chat URL ingestion.
