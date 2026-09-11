@@ -1,4 +1,6 @@
-# Retrieval evaluation
+# Evaluation
+
+## Retrieval
 
 `retrieval_cases.yaml` contains synthetic, test-only sources and representative direct,
 follow-up, abstention, and prompt-injection cases. These fixtures are not approved production
@@ -15,4 +17,18 @@ prints per-case source IDs and top scores, and exits non-zero when expectations 
 floor is a retrieval filter, not a probability or factual-confidence claim.
 
 Current provisional floor is `0.7`. It separates all seven synthetic cases with the pinned model,
-but must be recalibrated against the approved production corpus during Phase 6.
+but must be recalibrated against approved production content after that content is available.
+
+## Generated answers
+
+`generation_cases.yaml` evaluates answer controls separately from retrieval quality. It covers valid
+citations, follow-up context, uncited and fabricated answers, URL removal, no-evidence abstention,
+trusted source mapping, and escaped prompt-injection content.
+
+```bash
+PYTHONPATH=backend backend/.venv/bin/python evaluation/run_generation.py
+```
+
+The runner uses a deterministic fake provider and static synthetic retrieval hits. It makes no model,
+network, or paid API call. This verifies orchestration and deterministic output controls; it does not
+measure factual quality of a production conversational model.
