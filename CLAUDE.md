@@ -83,6 +83,7 @@ backend/.venv/bin/ruff check backend
 backend/.venv/bin/ruff format --check backend
 backend/.venv/bin/mypy backend/app backend/tests
 backend/.venv/bin/pytest backend/tests
+PYTHONPATH=backend backend/.venv/bin/python evaluation/run_retrieval.py
 ```
 
 The local ingestion CLI is implemented. Run it from the repository root:

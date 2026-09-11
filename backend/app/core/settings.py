@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     knowledge_login_window_seconds: int = Field(default=300, ge=1, le=86400)
     chat_retrieval_top_k: int = Field(default=6, ge=1, le=20)
     chat_retrieval_max_per_source: int = Field(default=2, ge=1, le=10)
-    chat_retrieval_min_score: float = Field(default=0.4, ge=-1, le=1)
+    chat_retrieval_min_score: float = Field(default=0.7, ge=-1, le=1)
     chat_provider: Literal["disabled", "openai", "openrouter"] = "disabled"
     chat_base_url: str = ""
     chat_api_key: SecretStr | None = None

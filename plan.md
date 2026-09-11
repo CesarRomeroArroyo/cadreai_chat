@@ -429,6 +429,14 @@ Grounded chat API checkpoint evidence recorded on 2026-09-11:
 - Focused provider, follow-up query, chat API, and readiness tests passed: 18 tests. Ruff, formatting, and strict mypy passed for 47 source files.
 - All provider behavior used `httpx.MockTransport` or a fake provider; no OpenAI/OpenRouter request or paid API call occurred.
 
+Retrieval evaluation checkpoint evidence recorded on 2026-09-11:
+- Added a versioned seven-case dataset with synthetic test-only sources covering services, AI maturity, portal access, a contextual follow-up, unsupported pricing, an unrelated question, and prompt injection. Evaluation fixtures remain outside production knowledge paths.
+- Added a reproducible local-only runner that creates a temporary index, uses the pinned cached BGE revision, reports source IDs and top scores, and exits non-zero on expectation failures.
+- Initial `0.4` score floor passed 5/7 and incorrectly accepted unsupported pricing at `0.6290` and prompt injection at `0.4198`. A provisional `0.7` floor passed 7/7; positive top scores ranged from `0.8248` to `0.8492`.
+- Scores are recorded only as ranking/filter signals, never probabilities or factual-confidence claims. The provisional floor must be recalibrated against approved production content during Phase 6.
+- Full local verification passed: lock check, Ruff, formatting, strict mypy, 49 backend tests, frontend lint, four frontend tests, strict TypeScript/Vite build, and 7/7 real-model retrieval cases.
+- Evaluation loaded model files with `local_files_only=True`; no model download, generation-provider request, or paid API call occurred.
+
 ### Phase 5 — Chat interface and integrated flow
 
 **Status:** pending

@@ -4,9 +4,9 @@ Grounded customer support chatbot for Cadre AI. The application uses a React/Vit
 
 ## Current status
 
-Phase 3 is complete. Repository includes development tooling, backend health endpoint, frontend shell,
-local ingestion/indexing, protected knowledge APIs, responsive administration UI, and reversible
-DigitalOcean deployment. Retrieval, grounded chat, and generation remain pending.
+Phase 4 is in progress. Local retrieval, readiness, grounded chat orchestration, and the
+OpenAI-compatible provider adapter are implemented and tested. Production deployment of this backend
+checkpoint and the interactive chat UI remain pending.
 
 Public deployment: <https://cadre-ai.164.90.135.146.nip.io>
 
@@ -55,9 +55,11 @@ backend/.venv/bin/ruff check backend
 backend/.venv/bin/ruff format --check backend
 backend/.venv/bin/mypy backend/app backend/tests
 backend/.venv/bin/pytest backend/tests
+PYTHONPATH=backend backend/.venv/bin/python evaluation/run_retrieval.py
 ```
 
-Frontend and backend tests are local and do not call paid APIs.
+Frontend and backend tests are local and do not call paid APIs. Retrieval evaluation uses only the
+cached pinned embedding model and synthetic fixtures that are never added to production knowledge.
 
 ## Deployment
 
