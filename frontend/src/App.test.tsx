@@ -9,6 +9,9 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { name: 'How can we help?' })).toBeTruthy()
     expect(
+      screen.getByRole('link', { name: /cadre ai support assistant/i }),
+    ).toBeTruthy()
+    expect(
       (screen.getByRole('textbox', { name: 'Message Cadre AI' }) as HTMLTextAreaElement)
         .disabled,
     ).toBe(true)

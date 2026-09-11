@@ -4,7 +4,7 @@ function App() {
   return (
     <main className="app-shell">
       <header className="app-header">
-        <a className="brand" href="/" aria-label="Cadre AI support home">
+        <a className="brand" href="/">
           <span className="brand-mark" aria-hidden="true">
             C
           </span>
