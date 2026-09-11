@@ -10,6 +10,7 @@
 - Deployment created: no
 - Public URL: not available
 - Last updated: 2026-09-10
+- Deployment target revised: existing DigitalOcean Droplet; exact host and domain confirmation pending
 
 ## Inputs Reviewed
 
@@ -120,8 +121,8 @@ FastAPI
 
 ### Restart and deployment behavior
 
-- Railway persistent volume stores generated knowledge artifacts and a pinned model cache outside Git.
-- Deployment/bootstrap step explicitly downloads the pinned model if absent and prepares or restores the index before the service becomes ready.
+- Dedicated DigitalOcean host directories store generated knowledge artifacts and the pinned model cache outside Git, proposed as `/var/lib/cadre-ai/index` and `/var/lib/cadre-ai/models`.
+- Deployment/bootstrap step explicitly downloads the pinned model if absent and prepares or restores the index before the systemd service becomes ready.
 - Backend startup loads existing weights and index; readiness fails if artifacts are absent or incompatible.
 - Chat requests never trigger model downloads, URL downloads, ingestion, or index rebuilding.
 - Model weights and heavy caches stay out of Git and ZIP. README will provide reproducible preparation commands.
@@ -177,19 +178,26 @@ FastAPI
 
 ## Deployment Proposal
 
-### Selected default
+### Selected target
 
-- **Frontend:** Vercel static Vite deployment.
-- **Backend:** Railway Python service built without Docker, one worker, health/readiness checks, and persistent volume for model cache and RAG artifacts.
-- **Why:** fast monorepo deployments, public HTTPS URLs, environment-secret support, no Dockerfile, and backend filesystem persistence across process restarts.
+- **Host:** the user's existing DigitalOcean Droplet. SSH config currently exposes candidate alias `digitalocean`; confirm it once before the first deployment.
+- **Frontend:** build the Vite application and serve immutable static assets from a versioned release directory such as `/opt/cadre-ai/releases/<revision>/frontend/dist`.
+- **Backend:** install the FastAPI application in the same versioned release, run one Uvicorn worker as a dedicated non-login service user under systemd, and bind only to `127.0.0.1`.
+- **Public routing:** reuse the host's existing Nginx or Caddy installation when compatible. Serve the frontend at the selected domain and reverse-proxy `/api/`, `/health`, and `/ready` to Uvicorn. Do not replace unrelated host configuration.
+- **Persistent state:** keep model cache and RAG artifacts outside release directories under `/var/lib/cadre-ai`; releases can change without deleting runtime data.
+- **Secrets:** store production environment values outside Git under `/etc/cadre-ai/backend.env`, readable only by root and the service account.
+- **Why:** one existing machine avoids platform subscriptions, supports local model/index persistence, keeps frontend and API on one origin, and works without Docker.
 
 ### Constraints
 
-- Vercel filesystem cannot host persistent local model/index state for FastAPI, so backend must run separately.
-- Railway volume availability, storage allowance, memory, CPU, sleep behavior, and cost must be confirmed before deployment.
+- Before any host change, perform a read-only inventory of operating system, CPU, RAM, disk, existing services, listening ports, firewall, web server, TLS tooling, and available domain configuration.
+- Existing workloads must not be restarted, overwritten, or reconfigured without reviewing impact and receiving approval for disruptive actions.
+- The Droplet must have enough memory and disk for Python dependencies, the roughly 130 MB embedding model, index artifacts, and process overhead; exact capacity remains unverified.
+- HTTPS requires a confirmed domain/subdomain and DNS mapping, plus a compatible existing certificate workflow or an approved certificate setup.
+- Deployment should use versioned releases and an atomic `current` symlink so rollback does not require rebuilding files in place.
 - One-worker in-memory rate limiting is only an MVP control; it resets on restart and does not coordinate across replicas.
 - Source updates on persistent storage need an explicit operational command or controlled redeploy; there is no admin UI.
-- Deployment destination and account/project must be confirmed before first deployment.
+- Host alias/IP, domain/subdomain, deployment path, and permission to modify web-server/systemd configuration must be confirmed once before first deployment.
 
 ## Sequential Phases
 
@@ -242,13 +250,19 @@ Verification evidence recorded on 2026-09-10:
 **Status:** pending
 
 Deliverables:
-- After destination confirmation, deploy static frontend and health-only backend skeleton.
-- Configure production CORS and environment placeholders without real keys in repository.
-- Record URLs and platform constraints.
+- Confirm the exact DigitalOcean host, domain/subdomain, and allowed configuration changes.
+- Audit host capacity and existing services read-only before modifying it.
+- Prepare a versioned release without Docker, a dedicated service user, systemd unit, external environment file, persistent data directories, and safe web-server routing.
+- Deploy the static frontend and health-only backend skeleton without provider credentials.
+- Keep frontend and API on one origin where possible; otherwise configure exact production CORS.
+- Record deployment and rollback commands, URLs, ownership, and host constraints without exposing secrets.
 
 Acceptance:
-- Public frontend loads.
-- Public backend health endpoint responds.
+- Existing host services remain healthy and their configuration is preserved.
+- Public HTTPS frontend loads at the confirmed domain.
+- Public backend health endpoint responds through the reverse proxy while Uvicorn remains bound to localhost.
+- systemd restarts the backend successfully and logs contain no secrets.
+- Static release and service rollback procedure is documented and checked.
 - No claim of functional chat yet.
 - `plan.md` updated and phase committed.
 
@@ -329,7 +343,7 @@ Acceptance:
 Deliverables:
 - Confirm production OpenRouter model and strict test budget.
 - Run a small explicitly authorized real-provider evaluation.
-- Deploy compatible pinned model cache and RAG index to persistent backend storage.
+- Provision the compatible pinned model cache and RAG index under the Droplet's persistent data directory.
 - Verify public frontend, backend readiness, representative answers, abstention, sources, and mobile layout.
 
 Acceptance:
@@ -396,10 +410,9 @@ Each case will identify expected source IDs or `must_abstain: true`. Retrieval m
 
 ## Pending Decisions Required Before Relevant Phases
 
-1. **Implementation authorization:** approve or request changes to this plan before Phase 1.
+1. **Deployment destination:** confirm whether SSH alias `digitalocean` is the approved Droplet, provide the intended domain/subdomain, and authorize the specific web-server/systemd changes before Phase 2. Keep raw host details outside repository documentation.
 2. **Official source allowlist:** approve the exact Cadre AI URLs after they are researched and proposed in Phase 3; no URL will be indexed merely because it appears in chat.
-3. **Deployment destination:** confirm Vercel + Railway account/project and acceptable Railway cost/resources before Phase 2.
-4. **Production model:** confirm an OpenRouter model available to the challenge key after pricing/access review, before Phase 7.
-5. **Secrets:** provide development and production keys only through local/platform environment configuration when their phases begin; never send them for inclusion in files.
+3. **Production model:** confirm an OpenRouter model available to the challenge key after pricing/access review, before Phase 7.
+4. **Secrets:** provide development and production keys only through local/platform environment configuration when their phases begin; never send them for inclusion in files.
 
-Only decision 1 is needed to start Phase 1. Deployment and provider decisions can wait until their listed phases.
+Phase 1 is complete. Decision 1 is required before Phase 2 changes the host. Remaining decisions can wait until their listed phases.

@@ -36,7 +36,7 @@ This file is the project-level operating contract for AI-assisted development. K
 - Production generation: OpenRouter using the challenge key. Production must not require or fall back to the personal OpenAI key.
 - Retrieval: local embeddings plus a persisted local vector index. Embedding and retrieval must not call OpenAI or OpenRouter.
 - Storage: files only for the initial version. Do not add a relational database. If later evidence requires one, document the reason and use MySQL only after approval.
-- Deployment proposal: Vercel for the static frontend and Railway for the FastAPI service with a persistent volume. No Dockerfile.
+- Deployment target: the user's existing DigitalOcean Droplet. Serve the built frontend and reverse-proxy FastAPI through the host's existing web server where safe; run Uvicorn under systemd and persist model/index data on the Droplet filesystem. No Dockerfile.
 
 ## Target Repository Layout
 
@@ -145,7 +145,7 @@ Replace provisional ingestion flags if implementation chooses a different valid 
 - Rationale: exact cosine-equivalent search, low operational complexity, approximately 1.5 KB per 384-dimensional float32 vector plus metadata, and acceptable latency for a small curated corpus. Approximate indexing is unnecessary initially.
 - Record model ID, immutable revision, embedding dimension, normalization, and chunking version in index metadata. Refuse readiness on mismatch and require an explicit rebuild.
 - Use the same pinned encoder and normalization for document and query vectors. Any documented query instruction must be deterministic and versioned.
-- Production startup loads weights from a pre-provisioned Railway volume/model cache and loads the existing index from the volume. Build/deploy setup may download the pinned model explicitly; request handling may not.
+- Production startup loads weights and the existing index from dedicated persistent directories on the DigitalOcean Droplet. Build/deploy setup may download the pinned model explicitly; request handling may not.
 - Model weights and heavy caches must remain outside Git and the submission ZIP. Index artifacts may be included only if lightweight and intentionally approved; reproducible index preparation instructions are mandatory either way.
 
 ## Retrieval, Grounding, and Citations
