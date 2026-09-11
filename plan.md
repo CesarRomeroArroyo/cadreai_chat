@@ -2,13 +2,13 @@
 
 ## Status
 
-- Current stage: Phase 2 infrastructure audit complete; deployment changes pending explicit authorization
-- Implementation authorization: Phase 1 authorized on 2026-09-10
+- Current stage: Phase 2 complete; stopped before Phase 3
+- Implementation authorization: Phases 1 and 2 authorized; Phase 3 pending
 - Dependencies installed: yes, frontend and Phase 1 backend development dependencies
 - Models downloaded: no
 - External APIs called: no
-- Deployment created: no
-- Public URL: not available
+- Deployment created: yes, reversible skeleton deployment on DigitalOcean
+- Public URL: `https://cadre-ai.164.90.135.146.nip.io`
 - Last updated: 2026-09-10
 - Deployment target: SSH alias `digitalocean`; initial public hostname `cadre-ai.<droplet-ip>.nip.io`
 
@@ -261,7 +261,7 @@ Verification evidence recorded on 2026-09-10:
 
 ### Phase 2 — Early public deployment skeleton
 
-**Status:** in progress — infrastructure audit complete; no deployment or configuration changes made
+**Status:** completed
 
 Deliverables:
 - Confirm the exact DigitalOcean host, domain/subdomain, and allowed configuration changes.
@@ -279,6 +279,22 @@ Acceptance:
 - Static release and service rollback procedure is documented and checked.
 - No claim of functional chat yet.
 - `plan.md` updated and phase committed.
+
+Verification evidence recorded on 2026-09-11:
+- Local frontend lint, Vitest, strict TypeScript build, backend Ruff, mypy, and pytest all passed immediately before packaging; no paid APIs were called.
+- Added committed systemd, Nginx, environment, rollback, and removal templates plus a deployment runbook.
+- Installed pinned `uv` 0.10.9 and isolated CPython 3.12.13 under `/opt/cadre-ai`; system Python remained unchanged. The upstream installer reported no checksum available, so version pinning and HTTPS reduced but did not eliminate installer supply-chain risk.
+- Deployed two immutable releases. Active and previous symlinks point to separate release directories.
+- Uvicorn runs as dedicated non-login user `cadreai`, one worker, bound only to `127.0.0.1:8010`, under a hardened systemd unit.
+- Nginx configuration validation passed before reload; an isolated Cadre AI site serves frontend and proxies backend health/API paths.
+- Let's Encrypt certificate was issued successfully for the nip.io hostname and expires on 2026-12-10; existing Certbot renewal timer is active.
+- HTTP redirects to HTTPS; public frontend and `GET /health` return HTTP 200 over HTTPS.
+- Immediate health probing after one restart raced process startup once; bounded polling then verified successful restart behavior.
+- Browser accessibility tree and visual layout were checked publicly at mobile and desktop sizes; browser console contained no warnings or errors.
+- Final Lighthouse navigation audit scored 100 accessibility, 100 best practices, and 100 SEO with zero failed audits.
+- Rollback command switched to the previous release, passed health, then switched back to the latest release and passed public health.
+- Existing Nginx, MySQL, Redis, PM2, and App Cafeteria services remained active; systemd reported no failed units.
+- Temporary upload and smoke-test files were removed. Persistent data, both releases, certificate, and rollback path remain intact.
 
 ### Phase 3 — Idempotent ingestion and local index
 
@@ -424,9 +440,8 @@ Each case will identify expected source IDs or `must_abstain: true`. Retrieval m
 
 ## Pending Decisions Required Before Relevant Phases
 
-1. **Remote changes:** authorize creation of the dedicated service account, `/opt/cadre-ai`, `/var/lib/cadre-ai`, `/etc/cadre-ai/backend.env`, one systemd unit, one isolated Nginx site, and a Certbot certificate for `cadre-ai.<droplet-ip>.nip.io`. Existing application configurations will not be edited.
-2. **Official source allowlist:** approve the exact Cadre AI URLs after they are researched and proposed in Phase 3; no URL will be indexed merely because it appears in chat.
-3. **Production model:** confirm an OpenRouter model available to the challenge key after pricing/access review, before Phase 7.
-4. **Secrets:** provide development and production keys only through local/platform environment configuration when their phases begin; never send them for inclusion in files.
+1. **Official source allowlist:** approve the exact Cadre AI URLs after they are researched and proposed in Phase 3; no URL will be indexed merely because it appears in chat.
+2. **Production model:** confirm an OpenRouter model available to the challenge key after pricing/access review, before Phase 7.
+3. **Secrets:** provide development and production keys only through local/platform environment configuration when their phases begin; never send them for inclusion in files.
 
-Phase 2 host selection and read-only audit are complete. Decision 1 is required before any remote mutation. Remaining decisions can wait until their listed phases.
+Phase 2 is complete. Phase 3 requires source research and explicit approval of the resulting allowlist before ingestion. Remaining decisions can wait until their listed phases.

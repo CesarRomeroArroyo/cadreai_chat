@@ -4,7 +4,9 @@ Grounded customer support chatbot for Cadre AI. The planned application uses a R
 
 ## Current status
 
-Phase 1 establishes the repository, development tooling, backend health endpoint, and frontend shell. Chat, ingestion, retrieval, and generation are intentionally not implemented yet.
+Phase 2 establishes the repository, development tooling, backend health endpoint, frontend shell, and reversible DigitalOcean deployment. Chat, ingestion, retrieval, and generation are intentionally not implemented yet.
+
+Public skeleton: <https://cadre-ai.164.90.135.146.nip.io>
 
 ## Repository layout
 
@@ -52,6 +54,19 @@ backend/.venv/bin/pytest backend/tests
 ```
 
 Frontend and backend tests are local and do not call paid APIs.
+
+## Deployment
+
+The current skeleton runs on the existing DigitalOcean Droplet without Docker:
+
+- Nginx serves the static frontend and proxies backend routes.
+- One systemd-managed Uvicorn worker listens only on `127.0.0.1:8010`.
+- Releases are immutable under `/opt/cadre-ai/releases`.
+- `current` and `previous` symlinks support atomic rollback.
+- Persistent model/index directories live under `/var/lib/cadre-ai`.
+- Production environment values live outside Git under `/etc/cadre-ai`.
+
+See `deploy/digitalocean/README.md` for deployment, rollback, and first-deployment removal procedures.
 
 ## Security
 
