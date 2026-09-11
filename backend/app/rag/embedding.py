@@ -1,10 +1,13 @@
 import os
+import threading
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Protocol
 
 import numpy as np
 from numpy.typing import NDArray
+
+QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
 
 
 class Embedder(Protocol):
@@ -17,6 +20,8 @@ class Embedder(Protocol):
     def decode(self, token_ids: Sequence[int]) -> str: ...
 
     def encode_documents(self, texts: Sequence[str]) -> NDArray[np.float32]: ...
+
+    def encode_query(self, text: str) -> NDArray[np.float32]: ...
 
 
 class SentenceTransformerEmbedder:
@@ -49,6 +54,7 @@ class SentenceTransformerEmbedder:
             device="cpu",
         )
         self.dimension = self._model.get_embedding_dimension() or 0
+        self._inference_lock = threading.Lock()
         if self.dimension <= 0:
             raise RuntimeError("Embedding model did not report a valid dimension")
 
@@ -68,11 +74,16 @@ class SentenceTransformerEmbedder:
     def encode_documents(self, texts: Sequence[str]) -> NDArray[np.float32]:
         if not texts:
             return np.empty((0, self.dimension), dtype=np.float32)
-        vectors = self._model.encode(
-            list(texts),
-            batch_size=16,
-            convert_to_numpy=True,
-            normalize_embeddings=True,
-            show_progress_bar=False,
-        )
+        with self._inference_lock:
+            vectors = self._model.encode(
+                list(texts),
+                batch_size=16,
+                convert_to_numpy=True,
+                normalize_embeddings=True,
+                show_progress_bar=False,
+            )
         return np.asarray(vectors, dtype=np.float32)
+
+    def encode_query(self, text: str) -> NDArray[np.float32]:
+        vectors = self.encode_documents([f"{QUERY_PREFIX}{text.strip()}"])
+        return vectors[0]

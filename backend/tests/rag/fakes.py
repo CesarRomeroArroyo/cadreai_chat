@@ -37,3 +37,6 @@ class FakeEmbedder:
         if not vectors:
             return np.empty((0, self.dimension), dtype=np.float32)
         return np.asarray(vectors, dtype=np.float32)
+
+    def encode_query(self, text: str) -> NDArray[np.float32]:
+        return self.encode_documents([text])[0]

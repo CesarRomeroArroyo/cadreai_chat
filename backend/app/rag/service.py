@@ -68,7 +68,7 @@ class KnowledgeService:
         self.chunk_overlap = chunk_overlap
         self._mutation_lock = threading.Lock()
 
-    def _load_state(self) -> SnapshotState:
+    def load_state(self) -> SnapshotState:
         state = self.store.load(dimension=self.embedder.dimension)
         metadata = state.metadata
         if metadata is None:
@@ -94,7 +94,7 @@ class KnowledgeService:
         return state
 
     def list_sources(self) -> list[SourceRecord]:
-        state = self._load_state()
+        state = self.load_state()
         return sorted(state.sources.values(), key=lambda source: source.title.casefold())
 
     def prepare_file(
@@ -152,7 +152,7 @@ class KnowledgeService:
             self._mutation_lock.release()
 
     def _upsert_locked(self, prepared_sources: list[PreparedSource]) -> list[IngestionResult]:
-        state = self._load_state()
+        state = self.load_state()
         sources = dict(state.sources)
         contents = dict(state.contents)
         retained = [
@@ -256,7 +256,7 @@ class KnowledgeService:
         if not self._mutation_lock.acquire(blocking=False):
             raise IngestionError("Another ingestion operation is already running")
         try:
-            state = self._load_state()
+            state = self.load_state()
             if source_id not in state.sources:
                 return False
             sources = dict(state.sources)

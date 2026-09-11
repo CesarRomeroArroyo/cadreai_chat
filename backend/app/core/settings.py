@@ -42,6 +42,8 @@ class Settings(BaseSettings):
     knowledge_cookie_secure: bool = True
     knowledge_login_attempts: int = Field(default=5, ge=1, le=100)
     knowledge_login_window_seconds: int = Field(default=300, ge=1, le=86400)
+    chat_retrieval_top_k: int = Field(default=6, ge=1, le=20)
+    chat_retrieval_max_per_source: int = Field(default=2, ge=1, le=10)
 
 
 @lru_cache(maxsize=1)

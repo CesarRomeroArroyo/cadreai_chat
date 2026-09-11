@@ -20,6 +20,7 @@ class SnapshotState:
     contents: dict[str, tuple[ExtractedSection, ...]]
     chunks: list[ChunkRecord]
     vectors: NDArray[np.float32]
+    index: faiss.Index
     metadata: IndexMetadata | None
 
 
@@ -35,6 +36,7 @@ class SnapshotStore:
             contents={},
             chunks=[],
             vectors=np.empty((0, dimension), dtype=np.float32),
+            index=faiss.IndexFlatIP(dimension),
             metadata=None,
         )
 
@@ -42,6 +44,10 @@ class SnapshotStore:
         if not self.current_link.exists() and not self.current_link.is_symlink():
             return None
         return self.current_link.resolve(strict=True)
+
+    def active_snapshot_id(self) -> str | None:
+        snapshot = self._active_snapshot()
+        return snapshot.name if snapshot is not None else None
 
     def _read_source_data(
         self, snapshot: Path
@@ -107,6 +113,7 @@ class SnapshotStore:
             contents=contents,
             chunks=chunks,
             vectors=vectors,
+            index=index,
             metadata=metadata,
         )
 

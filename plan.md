@@ -2,8 +2,8 @@
 
 ## Status
 
-- Current stage: Phase 3 completed; Phase 4 pending authorization
-- Implementation authorization: Phases 1–3 authorized; push to `origin/master` authorized after each logical commit
+- Current stage: Phase 4 in progress
+- Implementation authorization: Phases 1–4 authorized; push to `origin/master` authorized after each logical commit
 - Dependencies installed: yes, frontend, backend development, and production dependencies
 - Models downloaded: yes, pinned embedding model on the production host
 - External APIs called: Hugging Face model download only; no generation-provider API calls
@@ -394,7 +394,7 @@ Production deployment evidence recorded on 2026-09-11:
 
 ### Phase 4 — Retrieval, provider adapter, and grounded chat API
 
-**Status:** pending
+**Status:** in progress
 
 Deliverables:
 - Singleton embedding/index lifecycle and readiness behavior.
@@ -411,6 +411,14 @@ Acceptance:
 - OpenAI/OpenRouter switch requires environment changes only.
 - Provider error categories and input limits are tested.
 - `plan.md` updated and phase committed.
+
+Retrieval/readiness checkpoint evidence recorded on 2026-09-11:
+- Added a process-level retrieval service that keeps the active immutable FAISS snapshot loaded and refreshes only when the atomic `current` snapshot symlink changes.
+- Added deterministic BGE query encoding, finite vector validation, exact inner-product search, bounded `top_k`, and per-source diversity.
+- Added `GET /ready`; it returns 200 only when a compatible active snapshot is loaded and returns a safe 503 for an absent or incompatible snapshot. A valid empty snapshot remains ready.
+- Serialized SentenceTransformer inference through one process-level lock so chat queries cannot race ingestion model calls.
+- Focused retrieval, readiness, ingestion regression, Ruff, formatting, and strict mypy checks passed: 12 tests and 33 typed source files.
+- No external model or generation-provider API was called during this checkpoint.
 
 ### Phase 5 — Chat interface and integrated flow
 
@@ -520,4 +528,4 @@ Each case will identify expected source IDs or `must_abstain: true`. Retrieval m
 1. **Production model:** confirm an OpenRouter model available to the challenge key after pricing/access review, before Phase 7.
 2. **Generation secrets:** administrator credentials are configured on the Droplet; generation-provider keys are provided only through backend environment configuration in their later phase.
 
-Phase 3 is complete. Phase 4 requires explicit authorization before implementation. Individual web sources become approved only through the authenticated administrator workflow and must remain within configured Cadre AI domains. Remaining decisions can wait until their listed phases.
+Phase 4 is authorized and in progress. Individual web sources become approved only through the authenticated administrator workflow and must remain within configured Cadre AI domains. Remaining decisions can wait until their listed phases.
