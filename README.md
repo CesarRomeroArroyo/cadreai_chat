@@ -4,9 +4,9 @@ Grounded customer support chatbot for Cadre AI. The application uses a React/Vit
 
 ## Current status
 
-Phase 4 is in progress. Local retrieval, readiness, grounded chat orchestration, and the
-OpenAI-compatible provider adapter are implemented and tested. Production deployment of this backend
-checkpoint and the interactive chat UI remain pending.
+Phase 4 is complete. Retrieval, readiness, grounded chat orchestration, and the OpenAI-compatible
+provider adapter are implemented, tested, and deployed. The interactive chat UI, approved production
+sources, and production generation credentials remain pending.
 
 Public deployment: <https://cadre-ai.164.90.135.146.nip.io>
 
@@ -42,7 +42,9 @@ pnpm --dir frontend dev
 backend/.venv/bin/uvicorn app.main:app --app-dir backend --reload
 ```
 
-The backend currently exposes `GET /health`. Chat and readiness endpoints are scheduled for later phases.
+The backend exposes `GET /health`, `GET /ready`, protected knowledge APIs, and `POST /api/v1/chat`.
+Provider mode defaults to `disabled`; chat abstains without evidence and fails closed if evidence exists
+while generation is unavailable.
 
 ## Verification
 

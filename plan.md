@@ -2,7 +2,7 @@
 
 ## Status
 
-- Current stage: Phase 4 in progress
+- Current stage: Phase 4 completed; Phase 5 pending authorization
 - Implementation authorization: Phases 1–4 authorized; push to `origin/master` authorized after each logical commit
 - Dependencies installed: yes, frontend, backend development, and production dependencies
 - Models downloaded: yes, pinned embedding model on the production host
@@ -394,7 +394,7 @@ Production deployment evidence recorded on 2026-09-11:
 
 ### Phase 4 — Retrieval, provider adapter, and grounded chat API
 
-**Status:** in progress
+**Status:** completed
 
 Deliverables:
 - Singleton embedding/index lifecycle and readiness behavior.
@@ -436,6 +436,16 @@ Retrieval evaluation checkpoint evidence recorded on 2026-09-11:
 - Scores are recorded only as ranking/filter signals, never probabilities or factual-confidence claims. The provisional floor must be recalibrated against approved production content during Phase 6.
 - Full local verification passed: lock check, Ruff, formatting, strict mypy, 49 backend tests, frontend lint, four frontend tests, strict TypeScript/Vite build, and 7/7 real-model retrieval cases.
 - Evaluation loaded model files with `local_files_only=True`; no model download, generation-provider request, or paid API call occurred.
+
+Production deployment evidence recorded on 2026-09-11:
+- Configured production `CHAT_PROVIDER=disabled` before startup while retaining OpenRouter-only production placeholders for the later authorized model phase. No personal OpenAI key, fallback, or provider request was used.
+- Built and smoke-tested immutable release `/opt/cadre-ai/releases/20260911172909-534d57f` with Python 3.12, CPU-only Torch, cached model files, and the existing persistent index before activation.
+- Public `GET /health` and `GET /ready` return 200. Readiness reports a valid compatible empty snapshot with zero sources and zero chunks; this proves lifecycle compatibility, not availability of production evidence.
+- Public `POST /api/v1/chat` returned the bounded abstention response without calling a provider. Request ID propagation, stable validation errors, and the 32 KiB backend body limit were verified through Nginx.
+- Initial production inspection found structured chat events missing because Uvicorn disabled the custom logger namespace. Commits `9417c99` and `534d57f` added a privacy regression test and routed events through configured `uvicorn.error`; journald then showed request ID, status, latency, retrieval count, provider latency, error category, and token fields without raw messages or evidence.
+- Final service memory was approximately 342 MiB. `cadre-ai.service` remained active with zero automatic restarts, no failed systemd units, and no recent warning-level entries.
+- Rollback from `534d57f` to `/opt/cadre-ai/releases/20260911172304-4404497` and back passed local readiness and final public health/readiness checks.
+- Temporary host archives and smoke files were removed. Active production knowledge remains empty, so all public chat questions currently abstain; approved sources and enabled OpenRouter generation remain later-phase work.
 
 ### Phase 5 — Chat interface and integrated flow
 
@@ -545,4 +555,4 @@ Each case will identify expected source IDs or `must_abstain: true`. Retrieval m
 1. **Production model:** confirm an OpenRouter model available to the challenge key after pricing/access review, before Phase 7.
 2. **Generation secrets:** administrator credentials are configured on the Droplet; generation-provider keys are provided only through backend environment configuration in their later phase.
 
-Phase 4 is authorized and in progress. Individual web sources become approved only through the authenticated administrator workflow and must remain within configured Cadre AI domains. Remaining decisions can wait until their listed phases.
+Phase 4 is complete. Phase 5 requires explicit authorization before implementation. Individual web sources become approved only through the authenticated administrator workflow and must remain within configured Cadre AI domains. Remaining decisions can wait until their listed phases.
