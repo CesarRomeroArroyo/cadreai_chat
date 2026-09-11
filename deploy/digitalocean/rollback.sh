@@ -5,6 +5,20 @@ readonly app_root="/opt/cadre-ai"
 readonly current_link="${app_root}/current"
 readonly previous_link="${app_root}/previous"
 
+wait_for_health() {
+  local attempts=0
+
+  while [[ "${attempts}" -lt 10 ]]; do
+    if curl --fail --silent --max-time 2 http://127.0.0.1:8010/health >/dev/null 2>&1; then
+      return 0
+    fi
+    attempts=$((attempts + 1))
+    sleep 1
+  done
+
+  return 1
+}
+
 if [[ "${EUID}" -ne 0 ]]; then
   printf 'Run as root.\n' >&2
   exit 1
@@ -33,12 +47,13 @@ mv -Tf "${app_root}/previous.next" "${previous_link}"
 
 systemctl restart cadre-ai.service
 
-if ! curl --fail --silent --show-error --max-time 10 http://127.0.0.1:8010/health >/dev/null; then
+if ! wait_for_health; then
   ln -sfn "${current_release}" "${app_root}/current.next"
   mv -Tf "${app_root}/current.next" "${current_link}"
   ln -sfn "${previous_release}" "${app_root}/previous.next"
   mv -Tf "${app_root}/previous.next" "${previous_link}"
   systemctl restart cadre-ai.service
+  wait_for_health || true
   printf 'Rollback target failed health check; original release restored.\n' >&2
   exit 1
 fi
