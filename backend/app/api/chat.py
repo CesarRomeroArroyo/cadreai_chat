@@ -182,10 +182,6 @@ async def chat(
             "Answer service returned an invalid response.",
         )
     except Exception:
-        logger.exception(
-            "Unexpected chat failure",
-            extra={"request_id": request_id, "route": "/api/v1/chat"},
-        )
         status_code, code, safe_message = 500, "internal_error", "Request could not be completed."
     else:
         usage = outcome.usage

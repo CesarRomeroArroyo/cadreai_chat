@@ -6,7 +6,15 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from app.core.settings import Settings
-from app.generation.errors import ProviderTimeoutError
+from app.generation.errors import (
+    InsufficientFundsError,
+    InvalidCredentialsError,
+    InvalidProviderRequestError,
+    MalformedProviderResponseError,
+    ProviderRateLimitError,
+    ProviderTimeoutError,
+    ProviderUnavailableError,
+)
 from app.generation.models import GenerationMessage, GenerationResult
 from app.main import create_app
 from app.rag.models import ExtractedSection, PreparedSource, SourceKind
@@ -206,6 +214,88 @@ async def test_maps_provider_failure_to_safe_error(tmp_path: Path) -> None:
     assert response.status_code == 504
     assert response.json()["error"]["code"] == "provider_timeout"
     assert "private" not in response.text
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    ("failure", "status_code", "code"),
+    [
+        (ProviderRateLimitError("private provider body"), 503, "provider_busy"),
+        (InvalidCredentialsError("private provider body"), 503, "provider_unavailable"),
+        (InsufficientFundsError("private provider body"), 503, "provider_unavailable"),
+        (ProviderUnavailableError("private provider body"), 503, "provider_unavailable"),
+        (InvalidProviderRequestError("private provider body"), 503, "provider_unavailable"),
+        (MalformedProviderResponseError("private provider body"), 502, "provider_response_invalid"),
+    ],
+)
+async def test_maps_all_provider_failures_to_stable_safe_errors(
+    tmp_path: Path,
+    failure: Exception,
+    status_code: int,
+    code: str,
+) -> None:
+    provider = FakeProvider(failure)
+    app, _, _ = make_app(tmp_path, provider)
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="https://testserver"
+    ) as client:
+        response = await client.post("/api/v1/chat", json={"message": "Services"})
+
+    assert response.status_code == status_code
+    assert response.json()["error"]["code"] == code
+    assert "private provider body" not in response.text
+
+
+@pytest.mark.anyio
+async def test_does_not_log_unexpected_exception_details(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    provider = FakeProvider(RuntimeError("raw chat and provider response must stay private"))
+    app, _, _ = make_app(tmp_path, provider)
+    caplog.set_level("INFO", logger="uvicorn.error")
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="https://testserver"
+    ) as client:
+        response = await client.post("/api/v1/chat", json={"message": "Services"})
+
+    assert response.status_code == 500
+    assert response.json()["error"]["code"] == "internal_error"
+    assert "raw chat" not in response.text
+    assert "raw chat" not in caplog.text
+    assert '"error_category":"internal_error"' in caplog.text
+
+
+@pytest.mark.anyio
+async def test_integrated_follow_up_uses_only_recent_history(tmp_path: Path) -> None:
+    provider = FakeProvider(GenerationResult(content="placeholder"))
+    app, _, chunk_id = make_app(tmp_path, provider, chat_max_history_messages=8)
+    assert chunk_id is not None
+    provider.result = GenerationResult(content=f"Strategy support [chunk:{chunk_id}]")
+    history = [
+        {"role": "user" if index % 2 == 0 else "assistant", "content": f"Turn {index}"}
+        for index in range(6)
+    ]
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="https://testserver"
+    ) as client:
+        response = await client.post(
+            "/api/v1/chat",
+            json={"message": "How do I continue?", "history": history},
+        )
+
+    assert response.status_code == 200
+    assert response.json()["sources"][0]["source_id"] == "official-services"
+    sent_messages = provider.calls[0]
+    assert [message.content for message in sent_messages[2:-1]] == [
+        "Turn 2",
+        "Turn 3",
+        "Turn 4",
+        "Turn 5",
+    ]
+    assert sent_messages[-1].content == "How do I continue?"
 
 
 @pytest.mark.anyio
