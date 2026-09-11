@@ -1,15 +1,16 @@
 # Cadre AI Support Chatbot
 
-Grounded customer support chatbot for Cadre AI. The planned application uses a React/Vite client, a FastAPI service, local embeddings, and a persisted FAISS index.
+Grounded customer support chatbot for Cadre AI. The application uses a React/Vite client, a FastAPI service, local embeddings, and a persisted FAISS index.
 
 ## Current status
 
-Phase 3 is in progress. Repository currently includes development tooling, backend health endpoint,
-frontend shell, reversible DigitalOcean deployment, and tested local ingestion/indexing core. Protected
-knowledge APIs and responsive administration UI are implemented; production deployment of Phase 3,
-retrieval, and generation remain pending.
+Phase 3 is complete. Repository includes development tooling, backend health endpoint, frontend shell,
+local ingestion/indexing, protected knowledge APIs, responsive administration UI, and reversible
+DigitalOcean deployment. Retrieval, grounded chat, and generation remain pending.
 
-Public skeleton: <https://cadre-ai.164.90.135.146.nip.io>
+Public deployment: <https://cadre-ai.164.90.135.146.nip.io>
+
+Protected knowledge console: <https://cadre-ai.164.90.135.146.nip.io/knowledge>
 
 ## Repository layout
 
@@ -60,7 +61,7 @@ Frontend and backend tests are local and do not call paid APIs.
 
 ## Deployment
 
-The current skeleton runs on the existing DigitalOcean Droplet without Docker:
+The current application foundation runs on the existing DigitalOcean Droplet without Docker:
 
 - Nginx serves the static frontend and proxies backend routes.
 - One systemd-managed Uvicorn worker listens only on `127.0.0.1:8010`.

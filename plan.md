@@ -2,14 +2,14 @@
 
 ## Status
 
-- Current stage: Phase 3 in progress
+- Current stage: Phase 3 completed; Phase 4 pending authorization
 - Implementation authorization: Phases 1–3 authorized; push to `origin/master` authorized after each logical commit
-- Dependencies installed: yes, frontend and Phase 1 backend development dependencies
-- Models downloaded: no
-- External APIs called: no
-- Deployment created: yes, reversible skeleton deployment on DigitalOcean
+- Dependencies installed: yes, frontend, backend development, and production dependencies
+- Models downloaded: yes, pinned embedding model on the production host
+- External APIs called: Hugging Face model download only; no generation-provider API calls
+- Deployment created: yes, reversible Phase 3 deployment on DigitalOcean
 - Public URL: `https://cadre-ai.164.90.135.146.nip.io`
-- Last updated: 2026-09-10
+- Last updated: 2026-09-11
 - Deployment target: SSH alias `digitalocean`; initial public hostname `cadre-ai.<droplet-ip>.nip.io`
 
 ## Inputs Reviewed
@@ -208,8 +208,8 @@ FastAPI
 - HTTPS requires a confirmed domain/subdomain and DNS mapping, plus a compatible existing certificate workflow or an approved certificate setup.
 - Deployment should use versioned releases and an atomic `current` symlink so rollback does not require rebuilding files in place.
 - One-worker in-memory rate limiting is only an MVP control; it resets on restart and does not coordinate across replicas.
-- Source updates currently use the local CLI; the protected administration UI remains in Phase 3 progress.
-- Host alias, initial nip.io hostname, deployment paths, and localhost port are selected. Permission for the listed web-server/systemd changes remains required before first deployment.
+- Source updates are available through both the local CLI and the protected administration UI.
+- Host alias, initial nip.io hostname, deployment paths, and localhost port are selected. Permission for the listed web-server/systemd changes was confirmed before first deployment.
 
 ### Read-only host audit — 2026-09-10
 
@@ -222,7 +222,7 @@ FastAPI
 - Port `8010` was unused during inspection and is selected for Uvicorn. Recheck immediately before deployment to avoid a race.
 - Host Python is 3.10 and no global Node executable is available. Build frontend locally; provision isolated Python 3.12 for backend instead of changing system Python.
 - MySQL, Redis, PM2, and several unrelated applications already run on the host. Cadre AI will not use or modify them.
-- Preliminary capacity is adequate for the Phase 2 skeleton and proposed small embedding model, but production memory must be measured after model loading.
+- Production capacity remains adequate after model loading; the Phase 3 service uses approximately 345 MiB.
 
 ## Sequential Phases
 
@@ -309,9 +309,9 @@ Verification evidence recorded on 2026-09-11:
 
 ### Phase 3 — Idempotent ingestion and local index
 
-**Status:** in progress
+**Status:** completed
 
-Core ingestion checkpoint completed locally on 2026-09-11; protected API/UI work remains.
+Core ingestion, protected API/UI, and production deployment completed on 2026-09-11.
 
 Deliverables:
 - Approved source manifest and document directory rules.
@@ -377,7 +377,20 @@ Protected knowledge UI checkpoint evidence recorded on 2026-09-11:
 - Local desktop and 375 px mobile visual checks passed for login and populated console states. Accessibility snapshots exposed expected headings, labels, pressed/disabled states, live feedback, and confirmation controls; Lighthouse snapshot scored 100 accessibility, 100 best practices, and 100 SEO.
 - Real browser-to-Vite-to-FastAPI integration used the cached pinned BGE model and a temporary index: login, authenticated source listing, TXT upload, embedding/FAISS activation, source refresh, rebuild, two-step deletion, and logout all succeeded. Final browser console contained no warnings or errors, and backend remained healthy.
 - Temporary source/index and local processes were removed or stopped. No production deployment or generation-provider API call occurred.
-- Remaining Phase 3 scope: full regression verification, production credential generation, model cache provisioning, deployment, public API/UI validation, and final Phase 3 status update.
+- Remaining Phase 3 scope at this checkpoint was full regression verification, production credential generation, model cache provisioning, deployment, public API/UI validation, and final status update.
+
+Production deployment evidence recorded on 2026-09-11:
+- Final regression passed: `uv lock --check --project backend`, Ruff, Ruff formatting, strict mypy, 29 backend tests, frontend lint, four frontend tests, strict TypeScript/Vite build, and React Doctor 100/100. Automated verification used fake embeddings where intended and made no generation-provider API calls.
+- Generated independent administrator password and session-signing secrets directly on the Droplet. `/etc/cadre-ai/backend.env` remains `0640 root:cadreai`; credential values were not printed or committed.
+- Downloaded the exact pinned `BAAI/bge-small-en-v1.5` revision into `/var/lib/cadre-ai/models` as `cadreai`; a subsequent local-files-only load returned dimension 384.
+- Deployed immutable release `/opt/cadre-ai/releases/20260911162342-b04d4c2`; `previous` points to `/opt/cadre-ai/releases/20260911161904-edc6238`. Uvicorn remains one worker on `127.0.0.1:8010` and uses approximately 345 MiB after loading the embedding model.
+- Isolated release smoke tests on `127.0.0.1:8011` passed before activation. Public HTTPS `GET /health`, `/knowledge`, and unauthenticated session protection passed after activation.
+- Public authenticated API smoke covered secure-cookie attributes, login, TXT upload, one-chunk embedding/index activation, source listing, full rebuild, deletion, logout, and post-logout rejection. Temporary source and request files were removed.
+- Increased only the Cadre AI Nginx `client_max_body_size` directive from `64k` to `21m`, preserved Certbot directives, passed `nginx -t`, and verified a 70 KB request reached backend validation instead of being rejected by Nginx.
+- Production rollback exposed a real cold-start timing defect: the original 10-second health window was too short for model loading. Commit `f1e1903` extends it to 60 seconds; rollback from latest to previous and back to latest then passed with health checks.
+- Public mobile Lighthouse scored 100 accessibility, 96 best practices, and 100 SEO. The only failed audit is the expected unauthenticated `401` session probe used to render the login screen; the prior accessible-name mismatch was fixed in `b04d4c2`.
+- Nginx and `cadre-ai.service` are active, no systemd units are failed, recent service logs contain no warnings, and temporary deployment archives were removed.
+- `GET /ready`, retrieval, chat, and generation remain intentionally pending for Phase 4. Public `/ready` currently returns 404 and no functional chat claim is made.
 
 ### Phase 4 — Retrieval, provider adapter, and grounded chat API
 
@@ -505,6 +518,6 @@ Each case will identify expected source IDs or `must_abstain: true`. Retrieval m
 ## Pending Decisions Required Before Relevant Phases
 
 1. **Production model:** confirm an OpenRouter model available to the challenge key after pricing/access review, before Phase 7.
-2. **Secrets:** production administrator credentials will be generated directly on the Droplet during Phase 3 deployment; generation-provider keys are provided only through local/platform environment configuration in their later phase.
+2. **Generation secrets:** administrator credentials are configured on the Droplet; generation-provider keys are provided only through backend environment configuration in their later phase.
 
-Phase 3 is authorized. Individual web sources become approved only through the authenticated administrator workflow and must remain within configured Cadre AI domains. Remaining decisions can wait until their listed phases.
+Phase 3 is complete. Phase 4 requires explicit authorization before implementation. Individual web sources become approved only through the authenticated administrator workflow and must remain within configured Cadre AI domains. Remaining decisions can wait until their listed phases.
