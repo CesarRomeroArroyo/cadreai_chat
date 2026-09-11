@@ -21,7 +21,7 @@ const DATE_FORMATTER = new Intl.DateTimeFormat('en', { dateStyle: 'medium' })
 
 function Brand() {
   return (
-    <a className="brand" href="/" aria-label="Cadre AI knowledge console">
+    <a className="brand" href="/">
       <span className="brand-mark" aria-hidden="true">
         C
       </span>
