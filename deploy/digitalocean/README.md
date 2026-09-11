@@ -40,7 +40,7 @@ After at least two releases exist:
 sudo /opt/cadre-ai/bin/rollback
 ```
 
-The command swaps `current` and `previous`, restarts the API, validates local health, and automatically restores the original release if the rollback target fails.
+The command swaps `current` and `previous`, restarts the API, waits up to 60 seconds for local health while the embedding model loads, and automatically restores the original release if the rollback target fails.
 
 ## First-deployment removal
 

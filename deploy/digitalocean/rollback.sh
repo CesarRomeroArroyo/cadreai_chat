@@ -4,11 +4,12 @@ set -euo pipefail
 readonly app_root="/opt/cadre-ai"
 readonly current_link="${app_root}/current"
 readonly previous_link="${app_root}/previous"
+readonly health_attempts=60
 
 wait_for_health() {
   local attempts=0
 
-  while [[ "${attempts}" -lt 10 ]]; do
+  while [[ "${attempts}" -lt "${health_attempts}" ]]; do
     if curl --fail --silent --max-time 2 http://127.0.0.1:8010/health >/dev/null 2>&1; then
       return 0
     fi
