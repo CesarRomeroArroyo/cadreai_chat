@@ -420,6 +420,15 @@ Retrieval/readiness checkpoint evidence recorded on 2026-09-11:
 - Focused retrieval, readiness, ingestion regression, Ruff, formatting, and strict mypy checks passed: 12 tests and 33 typed source files.
 - No external model or generation-provider API was called during this checkpoint.
 
+Grounded chat API checkpoint evidence recorded on 2026-09-11:
+- Added one provider-neutral generation interface and one asynchronous OpenAI-compatible adapter. OpenAI and OpenRouter differ only through validated backend settings; there is no automatic fallback.
+- Added fail-closed `disabled` provider mode for deployments without approved generation credentials. Provider configuration is validated at startup without making a provider request or logging keys.
+- Added bounded timeout, output tokens, temperature, and one transient retry. Invalid credentials, insufficient funds, provider rate limiting, timeout, unavailability, rejected requests, and malformed responses remain distinct internally while clients receive safe messages.
+- Added `POST /api/v1/chat` with bounded typed history, deterministic follow-up retrieval queries, request-body limits, per-IP in-memory rate limiting, safe request IDs, stable error envelopes, and minimal structured logs that exclude raw messages and retrieved content.
+- Added bounded context selection and explicit instructions treating documents and user messages as untrusted data. Backend citation parsing allows only supplied chunk IDs, maps URLs from trusted source metadata, removes fabricated citations and model-generated URLs, and abstains when evidence or valid citations are absent.
+- Focused provider, follow-up query, chat API, and readiness tests passed: 18 tests. Ruff, formatting, and strict mypy passed for 47 source files.
+- All provider behavior used `httpx.MockTransport` or a fake provider; no OpenAI/OpenRouter request or paid API call occurred.
+
 ### Phase 5 — Chat interface and integrated flow
 
 **Status:** pending

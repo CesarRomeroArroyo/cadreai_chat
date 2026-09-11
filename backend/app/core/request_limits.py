@@ -1,12 +1,22 @@
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from app.core.request_ids import request_id_from_headers
+
 
 class RequestBodyLimitMiddleware:
-    def __init__(self, app: ASGIApp, *, max_bytes: int, path_prefix: str) -> None:
+    def __init__(
+        self,
+        app: ASGIApp,
+        *,
+        max_bytes: int,
+        path_prefix: str,
+        error_code: str | None = None,
+    ) -> None:
         self.app = app
         self.max_bytes = max_bytes
         self.path_prefix = path_prefix
+        self.error_code = error_code
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if (
@@ -25,8 +35,12 @@ class RequestBodyLimitMiddleware:
                     await self._reject(scope, receive, send)
                     return
             except ValueError:
-                await JSONResponse(status_code=400, content={"detail": "Invalid Content-Length"})(
-                    scope, receive, send
+                await self._error_response(
+                    scope,
+                    receive,
+                    send,
+                    status_code=400,
+                    message="Invalid Content-Length",
                 )
                 return
 
@@ -56,8 +70,40 @@ class RequestBodyLimitMiddleware:
             await self._reject(scope, receive, send)
 
     async def _reject(self, scope: Scope, receive: Receive, send: Send) -> None:
-        response = JSONResponse(
+        await self._error_response(
+            scope,
+            receive,
+            send,
             status_code=413,
-            content={"detail": "Request body exceeds the configured size limit"},
+            message="Request body exceeds the configured size limit",
         )
+
+    async def _error_response(
+        self,
+        scope: Scope,
+        receive: Receive,
+        send: Send,
+        *,
+        status_code: int,
+        message: str,
+    ) -> None:
+        content: dict[str, object]
+        if self.error_code is None:
+            content = {"detail": message}
+            headers = None
+        else:
+            raw_headers = {
+                key.decode("latin-1").casefold(): value.decode("latin-1")
+                for key, value in scope.get("headers", [])
+            }
+            request_id = request_id_from_headers(raw_headers)
+            content = {
+                "error": {
+                    "code": self.error_code,
+                    "message": message,
+                    "request_id": request_id,
+                }
+            }
+            headers = {"X-Request-ID": request_id}
+        response = JSONResponse(status_code=status_code, content=content, headers=headers)
         await response(scope, receive, send)

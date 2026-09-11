@@ -44,6 +44,22 @@ class Settings(BaseSettings):
     knowledge_login_window_seconds: int = Field(default=300, ge=1, le=86400)
     chat_retrieval_top_k: int = Field(default=6, ge=1, le=20)
     chat_retrieval_max_per_source: int = Field(default=2, ge=1, le=10)
+    chat_retrieval_min_score: float = Field(default=0.4, ge=-1, le=1)
+    chat_provider: Literal["disabled", "openai", "openrouter"] = "disabled"
+    chat_base_url: str = ""
+    chat_api_key: SecretStr | None = None
+    chat_model: str = ""
+    chat_timeout_seconds: float = Field(default=20.0, gt=0, le=120)
+    chat_max_output_tokens: int = Field(default=400, ge=1, le=4096)
+    chat_temperature: float = Field(default=0.1, ge=0, le=1)
+    chat_max_history_messages: int = Field(default=8, ge=0, le=20)
+    chat_max_input_chars: int = Field(default=2000, ge=1, le=10_000)
+    chat_max_history_chars: int = Field(default=6000, ge=0, le=40_000)
+    chat_context_token_budget: int = Field(default=1800, ge=1, le=8000)
+    chat_max_request_bytes: int = Field(default=32 * 1024, ge=1, le=1024 * 1024)
+    chat_rate_limit_requests: int = Field(default=20, ge=1, le=1000)
+    chat_rate_limit_window_seconds: int = Field(default=60, ge=1, le=3600)
+    chat_provider_retries: int = Field(default=1, ge=0, le=1)
 
 
 @lru_cache(maxsize=1)
