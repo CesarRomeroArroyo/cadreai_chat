@@ -86,7 +86,7 @@ async def test_returns_only_validated_citations_and_trusted_urls(
             "[chunk:ffffffffffffffffffffffff] https://evil.example/path"
         )
     )
-    caplog.set_level("INFO", logger="cadre.chat")
+    caplog.set_level("INFO", logger="uvicorn.error")
 
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="https://testserver"

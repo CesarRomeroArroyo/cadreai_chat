@@ -20,8 +20,7 @@ from app.generation.errors import (
 from app.generation.service import GroundedChatService, HistoryTurn
 
 router = APIRouter(prefix="/api/v1", tags=["chat"])
-logger = logging.getLogger("cadre.chat")
-logger.setLevel(logging.INFO)
+logger = logging.getLogger("uvicorn.error")
 
 
 class HistoryMessage(BaseModel):
