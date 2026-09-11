@@ -152,10 +152,12 @@ FastAPI
 ### CLI contract
 
 - `sync`: ingest all approved files and manifest URLs, skipping unchanged sources.
-- `add --source-id ID`: ingest or update one approved source.
-- `remove --source-id ID`: remove source and all chunks, then rebuild derived index.
+- `add-file PATH`: ingest or update one file inside the approved documents directory.
+- `add-url URL [--source-id ID] [--title TITLE]`: ingest or update one allowlisted HTTPS source.
+- `remove SOURCE_ID`: remove source and all chunks, then rebuild derived index.
 - `rebuild`: regenerate every embedding and index artifact, required after incompatible model/config changes.
-- Exact executable syntax remains provisional until Phase 1 creates backend packaging and Phase 3 verifies commands.
+- `list`: emit current source metadata as JSON Lines.
+- Executable prefix from repository root: `backend/.venv/bin/python -m app.ingestion.cli`.
 
 ### Protected knowledge page
 
@@ -206,7 +208,7 @@ FastAPI
 - HTTPS requires a confirmed domain/subdomain and DNS mapping, plus a compatible existing certificate workflow or an approved certificate setup.
 - Deployment should use versioned releases and an atomic `current` symlink so rollback does not require rebuilding files in place.
 - One-worker in-memory rate limiting is only an MVP control; it resets on restart and does not coordinate across replicas.
-- Source updates on persistent storage need an explicit operational command or controlled redeploy; there is no admin UI.
+- Source updates currently use the local CLI; the protected administration UI remains in Phase 3 progress.
 - Host alias, initial nip.io hostname, deployment paths, and localhost port are selected. Permission for the listed web-server/systemd changes remains required before first deployment.
 
 ### Read-only host audit — 2026-09-10
@@ -309,6 +311,8 @@ Verification evidence recorded on 2026-09-11:
 
 **Status:** in progress
 
+Core ingestion checkpoint completed locally on 2026-09-11; protected API/UI work remains.
+
 Deliverables:
 - Approved source manifest and document directory rules.
 - Extractors for HTML, Markdown, TXT, and text PDFs.
@@ -331,6 +335,21 @@ Acceptance:
 - Administrator can list, replace, delete, and rebuild sources through the responsive web page.
 - Normal automated tests use fake embeddings and local fixtures; no generation-provider API is called.
 - `plan.md` updated and phase committed.
+
+Core ingestion checkpoint evidence recorded on 2026-09-11:
+- Added strict Markdown, TXT, text-PDF, HTML, and web-content extraction with challenge-content exclusion.
+- Added stable source/content/chunk identities, token-window chunking at configurable 384/64 defaults, normalized local embeddings, exact FAISS inner-product index, canonical metadata, and persisted source content.
+- Added immutable snapshots with validated artifacts and atomic symlink activation; failed generation preserves the active snapshot.
+- Added HTTPS host allowlisting, credential/port rejection, public-address checks, bounded redirects, response-size limits, and explicit content-type handling. DNS rebinding remains a documented residual risk.
+- Pinned `BAAI/bge-small-en-v1.5` revision `5c38ec7c405ec4b44b94cc5a9bb96e735b38267a`; real local smoke produced one normalized 384-dimensional vector and a one-source/one-chunk FAISS snapshot.
+- Pinned CPU-only Torch for Linux deployment to avoid CUDA dependency downloads while retaining the native macOS wheel for development.
+- `uv lock --project backend` and `uv sync --project backend --extra dev`: passed.
+- `backend/.venv/bin/ruff check backend`: passed.
+- `backend/.venv/bin/ruff format --check backend`: passed for 26 Python files.
+- `backend/.venv/bin/mypy backend/app backend/tests`: strict check passed for 26 Python files.
+- `backend/.venv/bin/pytest backend/tests`: 17 tests passed; fake embeddings used by automated tests and no generation-provider API was called.
+- CLI help, empty-manifest `sync`, and empty-index `list` were exercised using cached model files with `EMBEDDING_LOCAL_FILES_ONLY=true`.
+- Remaining Phase 3 scope: bounded multi-file validation, administrator authentication/session/origin controls, protected knowledge APIs, responsive `/knowledge` UI, integration tests, and deployment.
 
 ### Phase 4 — Retrieval, provider adapter, and grounded chat API
 

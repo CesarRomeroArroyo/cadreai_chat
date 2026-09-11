@@ -85,17 +85,20 @@ backend/.venv/bin/mypy backend/app backend/tests
 backend/.venv/bin/pytest backend/tests
 ```
 
-The ingestion interface remains planned for Phase 3 and is not yet implemented or verified:
+The local ingestion CLI is implemented. Run it from the repository root:
 
 ```bash
 # Knowledge ingestion
-backend/.venv/bin/python -m app.ingestion.cli sync --app-dir backend
-backend/.venv/bin/python -m app.ingestion.cli add --source-id SOURCE_ID --app-dir backend
-backend/.venv/bin/python -m app.ingestion.cli remove --source-id SOURCE_ID --app-dir backend
-backend/.venv/bin/python -m app.ingestion.cli rebuild --app-dir backend
+backend/.venv/bin/python -m app.ingestion.cli sync
+backend/.venv/bin/python -m app.ingestion.cli add-file backend/data/documents/SOURCE.md
+backend/.venv/bin/python -m app.ingestion.cli add-url https://cadreai.com/PATH --source-id SOURCE_ID
+backend/.venv/bin/python -m app.ingestion.cli remove SOURCE_ID
+backend/.venv/bin/python -m app.ingestion.cli rebuild
+backend/.venv/bin/python -m app.ingestion.cli list
 ```
 
-Replace provisional ingestion flags if implementation chooses a different valid CLI shape. README and this file must match verified commands exactly.
+`sync` and `list` were exercised with the pinned model in local-files-only mode. Mutation and
+failure behavior is covered with fake embeddings in the normal automated test suite.
 
 ## API and Chat Contract
 

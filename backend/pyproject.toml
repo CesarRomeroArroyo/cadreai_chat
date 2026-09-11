@@ -8,22 +8,42 @@ version = "0.1.0"
 description = "FastAPI backend for the Cadre AI support chatbot"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+  "beautifulsoup4>=4.13,<5",
+  "faiss-cpu>=1.12,<2",
   "fastapi>=0.117,<1",
+  "httpx>=0.28,<1",
+  "numpy>=2.2,<3",
   "pydantic-settings>=2.10,<3",
+  "pypdf>=6,<7",
+  "python-multipart>=0.0.20,<1",
+  "pyyaml>=6,<7",
+  "sentence-transformers>=5,<6",
+  "torch==2.5.1; sys_platform == 'darwin'",
+  "torch==2.5.1+cpu; sys_platform == 'linux'",
   "uvicorn[standard]>=0.35,<1",
 ]
 
 [project.optional-dependencies]
 dev = [
-  "httpx>=0.28,<1",
   "mypy>=1.18,<2",
   "pytest>=8.4,<9",
   "ruff>=0.13,<1",
+  "types-pyyaml>=6,<7",
 ]
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["app*"]
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cpu", marker = "sys_platform == 'linux'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [tool.pytest.ini_options]
 addopts = "--strict-config --strict-markers"
@@ -40,3 +60,7 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["faiss", "sentence_transformers"]
+ignore_missing_imports = true

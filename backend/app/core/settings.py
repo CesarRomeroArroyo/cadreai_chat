@@ -17,6 +17,19 @@ class Settings(BaseSettings):
 
     app_environment: Literal["development", "test", "production"] = "development"
     app_cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
+    knowledge_index_dir: Path = BACKEND_ROOT / "data" / "index"
+    knowledge_documents_dir: Path = BACKEND_ROOT / "data" / "documents"
+    embedding_cache_dir: Path = BACKEND_ROOT / ".cache" / "models"
+    embedding_model_id: str = "BAAI/bge-small-en-v1.5"
+    embedding_model_revision: str = "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a"
+    embedding_local_files_only: bool = False
+    embedding_dimension: int = 384
+    chunk_tokens: int = 384
+    chunk_overlap: int = 64
+    knowledge_allowed_hosts: list[str] = Field(default_factory=lambda: ["cadreai.com"])
+    knowledge_max_file_bytes: int = 5 * 1024 * 1024
+    knowledge_max_url_bytes: int = 5 * 1024 * 1024
+    knowledge_url_timeout_seconds: float = 15.0
 
 
 @lru_cache(maxsize=1)

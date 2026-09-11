@@ -4,7 +4,9 @@ Grounded customer support chatbot for Cadre AI. The planned application uses a R
 
 ## Current status
 
-Phase 2 establishes the repository, development tooling, backend health endpoint, frontend shell, and reversible DigitalOcean deployment. Chat, ingestion, retrieval, and generation are intentionally not implemented yet.
+Phase 3 is in progress. Repository currently includes development tooling, backend health endpoint,
+frontend shell, reversible DigitalOcean deployment, and tested local ingestion/indexing core. Protected
+knowledge APIs, administration UI, retrieval, and generation remain pending.
 
 Public skeleton: <https://cadre-ai.164.90.135.146.nip.io>
 
