@@ -1,0 +1,7 @@
+packages:
+  - frontend
+
+# protobufjs is a transitive development dependency. Its install script is not
+# required to lint, test, or build this browser application.
+allowBuilds:
+  protobufjs: false

@@ -66,24 +66,28 @@ Keep boundaries explicit: API orchestration must not contain extraction logic; p
 
 ## Commands
 
-No application commands exist yet. Do not present planned commands as verified. Phase 1 must add, run, and then update this section with exact commands supported by repository files.
-
-Planned command interface:
+The following setup and verification commands were exercised during Phase 1 on Node.js 22, pnpm 11, and Python 3.12:
 
 ```bash
 # Frontend
-pnpm --dir frontend install
+pnpm install
 pnpm --dir frontend dev
 pnpm --dir frontend lint
 pnpm --dir frontend test
 pnpm --dir frontend build
 
 # Backend
-python -m venv backend/.venv
-backend/.venv/bin/python -m pip install -e 'backend[dev]'
+uv sync --project backend --extra dev
 backend/.venv/bin/uvicorn app.main:app --app-dir backend --reload
+backend/.venv/bin/ruff check backend
+backend/.venv/bin/ruff format --check backend
+backend/.venv/bin/mypy backend/app backend/tests
 backend/.venv/bin/pytest backend/tests
+```
 
+The ingestion interface remains planned for Phase 3 and is not yet implemented or verified:
+
+```bash
 # Knowledge ingestion
 backend/.venv/bin/python -m app.ingestion.cli sync --app-dir backend
 backend/.venv/bin/python -m app.ingestion.cli add --source-id SOURCE_ID --app-dir backend
@@ -91,7 +95,7 @@ backend/.venv/bin/python -m app.ingestion.cli remove --source-id SOURCE_ID --app
 backend/.venv/bin/python -m app.ingestion.cli rebuild --app-dir backend
 ```
 
-Replace provisional flags if implementation chooses a different valid CLI shape. README and this file must match verified commands exactly.
+Replace provisional ingestion flags if implementation chooses a different valid CLI shape. README and this file must match verified commands exactly.
 
 ## API and Chat Contract
 

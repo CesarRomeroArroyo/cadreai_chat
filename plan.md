@@ -2,9 +2,9 @@
 
 ## Status
 
-- Current stage: planning only
-- Implementation authorization: pending
-- Dependencies installed: no
+- Current stage: Phase 1 complete; stopped before Phase 2
+- Implementation authorization: Phase 1 authorized on 2026-09-10
+- Dependencies installed: yes, frontend and Phase 1 backend development dependencies
 - Models downloaded: no
 - External APIs called: no
 - Deployment created: no
@@ -195,7 +195,7 @@ FastAPI
 
 ### Phase 0 — Planning and authorization
 
-**Status:** in progress
+**Status:** completed
 
 Deliverables:
 - Review repository and challenge PDF.
@@ -204,11 +204,11 @@ Deliverables:
 
 Acceptance:
 - No dependencies, model downloads, API calls, app implementation, commits, or deployment performed.
-- User reviews conflicts and explicitly authorizes implementation.
+- User reviewed conflicts and explicitly authorized Phase 1 on 2026-09-10.
 
 ### Phase 1 — Repository foundation
 
-**Status:** pending
+**Status:** completed
 
 Deliverables:
 - Scaffold strict React/Vite frontend and FastAPI backend.
@@ -221,6 +221,21 @@ Acceptance:
 - Backend import, lint/type checks, and baseline tests pass.
 - No secrets or generated dependency/build folders tracked.
 - `plan.md` updated and phase committed.
+
+Verification evidence recorded on 2026-09-10:
+- `pnpm install`: completed and generated the workspace lockfile. A transitive `protobufjs` install script is explicitly denied because frontend lint, test, and build do not require it.
+- `pnpm --dir frontend lint`: passed.
+- `pnpm --dir frontend test`: one test passed; no external API calls.
+- `pnpm --dir frontend build`: strict TypeScript and Vite production build passed.
+- `backend/.venv/bin/ruff check backend`: passed.
+- `backend/.venv/bin/ruff format --check backend`: passed for eight Python files.
+- `backend/.venv/bin/mypy backend/app backend/tests`: strict type check passed for eight Python files.
+- `backend/.venv/bin/pytest backend/tests`: one test passed without warnings or API calls.
+- Local Uvicorn smoke test: `GET /health` returned `{"status":"ok"}`.
+- Browser accessibility snapshot exposed the expected heading, message, labeled disabled composer, and disabled send button.
+- Visual checks completed at desktop and 375 × 812 mobile viewports; no browser console warnings or errors appeared.
+- React Doctor scanned five frontend files and reported 100/100 with no findings.
+- No model download, generation-provider call, deployment, push, or paid API usage occurred.
 
 ### Phase 2 — Early public deployment skeleton
 
