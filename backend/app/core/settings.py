@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     )
 
     app_environment: Literal["development", "test", "production"] = "development"
-    app_cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
+    app_cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5199"])
     knowledge_index_dir: Path = BACKEND_ROOT / "data" / "index"
     knowledge_documents_dir: Path = BACKEND_ROOT / "data" / "documents"
     embedding_cache_dir: Path = BACKEND_ROOT / ".cache" / "models"
