@@ -40,8 +40,11 @@ Run each application in a separate terminal:
 
 ```bash
 pnpm --dir frontend dev
-backend/.venv/bin/uvicorn app.main:app --app-dir backend --reload
+backend/.venv/bin/uvicorn app.main:app --app-dir backend --reload --port 8012
 ```
+
+Open the local chat at <http://localhost:5199>. Vite proxies `/api` to the backend on
+`http://127.0.0.1:8012`.
 
 The backend exposes `GET /health`, `GET /ready`, protected knowledge APIs, and `POST /api/v1/chat`.
 Provider mode defaults to `disabled`; chat abstains without evidence and fails closed if evidence exists

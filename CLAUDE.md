@@ -78,7 +78,7 @@ pnpm --dir frontend build
 
 # Backend
 uv sync --project backend --extra dev
-backend/.venv/bin/uvicorn app.main:app --app-dir backend --reload
+backend/.venv/bin/uvicorn app.main:app --app-dir backend --reload --port 8012
 backend/.venv/bin/ruff check backend
 backend/.venv/bin/ruff format --check backend
 backend/.venv/bin/mypy backend/app backend/tests
