@@ -198,6 +198,21 @@ Production loads one immutable, pinned embedding model revision from local files
 cannot replace model files. Dependency audits currently report no known vulnerabilities in production
 Python or frontend packages.
 
+## Submission archive
+
+Create archive from a clean clone so `.git` is included while ignored dependencies, builds, caches,
+models, generated indexes, and secret environment files remain excluded:
+
+```bash
+git clone --local --no-hardlinks . ../cadreai_chat_submission
+git -C ../cadreai_chat_submission remote set-url origin "$(git remote get-url origin)"
+(cd .. && zip -qry cadreai_chat_submission.zip cadreai_chat_submission)
+```
+
+Before upload, inspect archive and confirm it contains `.git/HEAD`, `CLAUDE.md`, `plan.md`, `README.md`,
+and `backend/.env.example`; confirm it contains no `.env`, `node_modules`, `.venv`, `dist`, model cache,
+or generated index snapshot. Upload destination comes from Cadre AI recruiting and is not stored here.
+
 ## Current limitations
 
 - Public DigitalOcean deployment remains intentionally unchanged with empty knowledge and provider mode

@@ -2,7 +2,7 @@
 
 ## Status
 
-- Current stage: local validation completed; production provider activation declined; Phase 8 delivery preparation in progress
+- Current stage: delivery preparation completed; ready for submission
 - Implementation authorization: implementation and local validation authorized; push to `origin/master` authorized after each logical commit
 - Dependencies installed: yes, frontend, backend development, and production dependencies
 - Models downloaded: yes, pinned embedding model on the production host
@@ -544,7 +544,14 @@ Acceptance:
 
 ### Phase 8 — Submission preparation
 
-**Status:** in progress
+**Status:** completed
+
+Completion evidence recorded on 2026-09-15:
+- Expanded `README.md` with reproducible prerequisites, environment creation, OpenRouter and direct OpenAI configuration, local model/index preparation, application startup, source-management commands, verification, paid-evaluation warning, deployment boundaries, limitations, and clean archive instructions.
+- Kept all credentials out of tracked files. A pattern scan across tracked files and complete Git patch history found no provider-key or private-key material. `.env` remains ignored; examples contain fictitious placeholders only.
+- Final verification passed: frontend lint, 9 frontend tests, production build, backend Ruff, format check, strict mypy, 63 backend tests, retrieval evaluation 7/7, generated-answer evaluation 7/7, and `pnpm audit --prod` with no known vulnerabilities. Backend dependency lock was unchanged from the Phase 6 zero-vulnerability audit.
+- Built and inspected a clean-clone submission archive including `.git`. Preview contained 791 entries, 12 approved knowledge documents, required root files, no missing required paths, and zero forbidden dependency/build/cache/environment/index paths; compressed size was approximately 1.25 MB.
+- DigitalOcean was restored and rechecked after scope clarification. It retains the prior Phase 6 release, empty index, disabled provider, and original placeholders; portable OpenRouter configuration exists only in the repository.
 
 Deliverables:
 - Final README with verified install, run, ingestion, update, removal, rebuild, test, provider-switch, architecture, limitations, deployment URL, and ZIP instructions.
