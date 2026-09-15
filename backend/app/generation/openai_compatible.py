@@ -21,6 +21,7 @@ EXPECTED_HOSTS: dict[ProviderName, str] = {
     "openai": "api.openai.com",
     "openrouter": "openrouter.ai",
 }
+MODERN_OPENAI_MODEL_PREFIXES = ("gpt-5", "gpt-6", "o1", "o3", "o4", "codex")
 
 
 def validate_provider_configuration(
@@ -67,6 +68,9 @@ class OpenAICompatibleProvider:
         )
         self.provider = provider
         self.model = model
+        self._uses_modern_openai_parameters = provider == "openai" and model.startswith(
+            MODERN_OPENAI_MODEL_PREFIXES
+        )
         self.max_output_tokens = max_output_tokens
         self.temperature = temperature
         self.retries = retries
@@ -78,15 +82,27 @@ class OpenAICompatibleProvider:
         }
 
     async def generate(self, messages: list[GenerationMessage]) -> GenerationResult:
-        payload = {
+        payload: dict[str, Any] = {
             "model": self.model,
             "messages": [
-                {"role": message.role, "content": message.content} for message in messages
+                {
+                    "role": (
+                        "developer"
+                        if self._uses_modern_openai_parameters and message.role == "system"
+                        else message.role
+                    ),
+                    "content": message.content,
+                }
+                for message in messages
             ],
-            "max_tokens": self.max_output_tokens,
-            "temperature": self.temperature,
             "stream": False,
         }
+        if self.provider == "openai":
+            payload["max_completion_tokens"] = self.max_output_tokens
+        else:
+            payload["max_tokens"] = self.max_output_tokens
+        if not self._uses_modern_openai_parameters:
+            payload["temperature"] = self.temperature
         for attempt in range(self.retries + 1):
             try:
                 response = await self._client.post(

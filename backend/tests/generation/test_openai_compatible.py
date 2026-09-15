@@ -16,13 +16,15 @@ from app.generation.models import GenerationMessage
 from app.generation.openai_compatible import OpenAICompatibleProvider
 
 
-def make_provider(handler: Callable[[httpx.Request], httpx.Response]) -> OpenAICompatibleProvider:
+def make_provider(
+    handler: Callable[[httpx.Request], httpx.Response], *, model: str = "test-model"
+) -> OpenAICompatibleProvider:
     client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
     return OpenAICompatibleProvider(
         provider="openai",
         base_url="https://api.openai.com/v1",
         api_key="test-api-key",
-        model="test-model",
+        model=model,
         timeout_seconds=1,
         max_output_tokens=100,
         temperature=0.1,
@@ -40,7 +42,7 @@ async def test_generates_with_bounded_openai_compatible_payload() -> None:
         assert payload == {
             "model": "test-model",
             "messages": [{"role": "user", "content": "Question"}],
-            "max_tokens": 100,
+            "max_completion_tokens": 100,
             "temperature": 0.1,
             "stream": False,
         }
@@ -59,6 +61,38 @@ async def test_generates_with_bounded_openai_compatible_payload() -> None:
     assert result.content == "Verified answer"
     assert result.usage is not None
     assert result.usage.total_tokens == 13
+    await provider.aclose()
+
+
+@pytest.mark.anyio
+async def test_uses_modern_parameters_for_gpt_5_models() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        payload = __import__("json").loads(request.content)
+        assert payload == {
+            "model": "gpt-5.6-luna",
+            "messages": [
+                {"role": "developer", "content": "Grounding rules"},
+                {"role": "user", "content": "Question"},
+            ],
+            "max_completion_tokens": 100,
+            "stream": False,
+        }
+        return httpx.Response(
+            200,
+            request=request,
+            json={"choices": [{"message": {"content": "Verified answer"}}]},
+        )
+
+    provider = make_provider(handler, model="gpt-5.6-luna")
+
+    result = await provider.generate(
+        [
+            GenerationMessage(role="system", content="Grounding rules"),
+            GenerationMessage(role="user", content="Question"),
+        ]
+    )
+
+    assert result.content == "Verified answer"
     await provider.aclose()
 
 
