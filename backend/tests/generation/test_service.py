@@ -73,6 +73,17 @@ def test_builds_deterministic_follow_up_query_from_recent_history() -> None:
     )
 
 
+def test_new_direct_question_excludes_history_and_normalizes_assistant_address() -> None:
+    history = [
+        HistoryTurn(role="user", content="Where is the portal?"),
+        HistoryTurn(role="assistant", content="I do not have enough information."),
+    ]
+
+    query = build_retrieval_query("What are your main services?", history)
+
+    assert query == "What are Cadre AI's main services?"
+
+
 @pytest.mark.anyio
 async def test_enforces_score_and_context_budgets_before_generation() -> None:
     accepted_id = "a" * 24
