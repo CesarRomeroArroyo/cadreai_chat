@@ -2,14 +2,14 @@
 
 ## Status
 
-- Current stage: Phase 6 completed; local Phase 7 pre-validation completed; production Phase 7 pending authorization
-- Implementation authorization: Phases 1–6 authorized; push to `origin/master` authorized after each logical commit
+- Current stage: local validation completed; production provider activation declined; Phase 8 delivery preparation in progress
+- Implementation authorization: implementation and local validation authorized; push to `origin/master` authorized after each logical commit
 - Dependencies installed: yes, frontend, backend development, and production dependencies
 - Models downloaded: yes, pinned embedding model on the production host
-- External APIs called: Hugging Face model download only; no generation-provider API calls
+- External APIs called: Hugging Face model download and explicitly authorized local OpenAI evaluation/diagnostic calls; no OpenRouter generation call
 - Deployment created: yes, reversible Phase 6 deployment on DigitalOcean
 - Public URL: `https://cadre-ai.164.90.135.146.nip.io`
-- Last updated: 2026-09-11
+- Last updated: 2026-09-15
 - Deployment target: SSH alias `digitalocean`; initial public hostname `cadre-ai.<droplet-ip>.nip.io`
 
 ## Inputs Reviewed
@@ -508,7 +508,7 @@ Completion evidence recorded on 2026-09-11:
 
 ### Phase 7 — Production model validation and final deployment
 
-**Status:** pending
+**Status:** closed without production provider activation per user instruction
 
 Local pre-validation evidence (2026-09-14):
 - Added an opt-in, local-only live evaluation runner and a versioned 20-case product dataset. The runner requires explicit paid-API confirmation and a bounded case count.
@@ -521,8 +521,13 @@ Local pre-validation evidence (2026-09-14):
 Production preparation evidence (2026-09-15):
 - OpenRouter's live model catalog lists `openai/gpt-5.6-luna` at USD 0.20 per million input tokens and USD 1.20 per million output tokens, with `max_tokens` and `max_completion_tokens` support and no temperature parameter.
 - Extended the provider adapter to validate OpenRouter's official `/api/v1` base path, omit unsupported temperature for provider-prefixed modern OpenAI models, retain OpenRouter's `max_tokens`, and preserve `system` messages through OpenRouter. Mock-transport coverage verifies the exact payload without a paid call.
-- Audited the existing Droplet configuration without exposing secrets: `cadre-ai.service` and Nginx are active, production provider remains disabled, OpenRouter base URL is present, model remains a placeholder, and a provider key is present. No production configuration was changed.
-- Proposed production choice: `openai/gpt-5.6-luna`, matching the successful local 20-case validation. Proposed live validation: 10 representative cases, 400 output tokens per call, no web search or tools, one bounded transient retry, and a USD 0.05 maximum expected spend. Explicit user approval remains required.
+- Audited the existing Droplet configuration without exposing secrets: `cadre-ai.service` and Nginx are active, production provider remains disabled, OpenRouter base URL is present, model remains a placeholder, and the key field was later confirmed to contain only its placeholder value.
+- Proposed production choice was `openai/gpt-5.6-luna`, matching the successful local 20-case validation. Proposed live validation was 10 representative cases, 400 output tokens per call, no web search or tools, one bounded transient retry, and a USD 0.05 maximum expected spend. This proposal was superseded by the scope correction below.
+
+Production scope correction (2026-09-15):
+- User clarified that OpenRouter must be configured for portable project delivery, not enabled on DigitalOcean.
+- A temporary release and reproducible index were prepared before this clarification. All related Droplet changes were reverted: active release restored to `/opt/cadre-ai/releases/20260911205722-2152fe0`, previous restored to `/opt/cadre-ai/releases/20260911182038-23b6f93`, empty 0-source index restored, environment restored, temporary documents/manifest/release removed, and provider left disabled with its original placeholder values.
+- Post-reversion checks confirmed active systemd service, empty ready index, and no OpenRouter call. OpenRouter setup remains documented in repository examples and README only.
 
 Deliverables:
 - Confirm production OpenRouter model and strict test budget.
@@ -539,7 +544,7 @@ Acceptance:
 
 ### Phase 8 — Submission preparation
 
-**Status:** pending
+**Status:** in progress
 
 Deliverables:
 - Final README with verified install, run, ingestion, update, removal, rebuild, test, provider-switch, architecture, limitations, deployment URL, and ZIP instructions.
@@ -594,7 +599,7 @@ Each case will identify expected source IDs or `must_abstain: true`. Retrieval m
 
 ## Pending Decisions Required Before Relevant Phases
 
-1. **Production model:** confirm an OpenRouter model available to the challenge key after pricing/access review, before Phase 7.
-2. **Generation secrets:** administrator credentials are configured on the Droplet; generation-provider keys are provided only through backend environment configuration in their later phase.
+1. **Submission destination:** recruiting submission link is supplied outside this repository; upload remains a user action.
+2. **Generation secrets:** users provide OpenRouter/OpenAI credentials only through an untracked backend environment file.
 
-Phase 6 is complete. Phase 7 requires explicit authorization before implementation, including explicit approval of the OpenRouter model and strict real-provider test budget. Individual web sources become approved only through the authenticated administrator workflow and must remain within configured Cadre AI domains.
+Local implementation and real-provider validation are complete. Production OpenRouter activation is intentionally excluded by user instruction. Phase 8 prepares reproducible documentation, secret-safe archive, and final delivery evidence.
