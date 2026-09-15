@@ -1,3 +1,4 @@
+import re
 import threading
 from dataclasses import dataclass
 
@@ -6,6 +7,99 @@ import numpy as np
 from app.rag.models import ChunkRecord, SourceRecord
 from app.rag.service import KnowledgeService
 from app.rag.store import SnapshotState
+
+TOKEN_RE = re.compile(r"[a-z0-9]+")
+SOURCED_SUMMARY_METADATA_RE = re.compile(
+    r"content\s*_\s*type\s*:\s*sourced\s*_\s*summary", re.IGNORECASE
+)
+STOP_WORDS = {
+    "a",
+    "ai",
+    "an",
+    "and",
+    "are",
+    "cadre",
+    "can",
+    "company",
+    "do",
+    "does",
+    "for",
+    "how",
+    "i",
+    "in",
+    "is",
+    "it",
+    "me",
+    "my",
+    "of",
+    "our",
+    "the",
+    "their",
+    "to",
+    "we",
+    "what",
+    "where",
+    "with",
+    "you",
+    "your",
+}
+TERM_ALIASES = {
+    "book": "appointment",
+    "booking": "appointment",
+    "call": "appointment",
+    "connect": "integrate",
+    "integration": "integrate",
+    "llms": "llm",
+    "model": "llm",
+    "models": "llm",
+    "platform": "system",
+    "replace": "integrate",
+    "request": "appointment",
+    "reservation": "appointment",
+    "schedule": "appointment",
+    "select": "choose",
+    "selection": "choose",
+    "software": "system",
+    "tool": "system",
+    "tools": "system",
+}
+
+
+def _normalize_term(term: str) -> str:
+    if term.endswith("ies") and len(term) > 4:
+        term = f"{term[:-3]}y"
+    elif term.endswith("ing") and len(term) > 5:
+        term = term[:-3]
+    elif term.endswith("ed") and len(term) > 4:
+        term = term[:-2]
+    elif term.endswith("s") and len(term) > 3:
+        term = term[:-1]
+    return TERM_ALIASES.get(term, term)
+
+
+def _terms(text: str) -> set[str]:
+    return {
+        normalized
+        for token in TOKEN_RE.findall(text.casefold())
+        if token not in STOP_WORDS
+        if (normalized := _normalize_term(token)) not in STOP_WORDS
+    }
+
+
+def _lexical_score(query_terms: set[str], searchable_text: str) -> float:
+    if not query_terms:
+        return 0.0
+    document_terms = _terms(searchable_text)
+    return len(query_terms & document_terms) / len(query_terms)
+
+
+def _is_searchable(location: str, text: str) -> bool:
+    if location.casefold() == "official sources":
+        return False
+    stripped = text.strip()
+    if stripped.startswith("---") and stripped.endswith("---"):
+        return False
+    return SOURCED_SUMMARY_METADATA_RE.search(stripped) is None
 
 
 @dataclass(frozen=True)
@@ -79,14 +173,29 @@ class RetrievalService:
         expected_shape = (self.knowledge_service.embedder.dimension,)
         if query_vector.shape != expected_shape or not np.isfinite(query_vector).all():
             raise RuntimeError("Query embedding is invalid")
-        candidate_count = min(len(state.chunks), self.top_k * max(self.max_per_source, 2))
+        candidate_count = len(state.chunks)
         scores, positions = state.index.search(query_vector.reshape(1, -1), candidate_count)
-        hits: list[RetrievalHit] = []
-        source_counts: dict[str, int] = {}
-        for score, position in zip(scores[0], positions[0], strict=True):
+        query_terms = _terms(query)
+        ranked: list[tuple[float, int]] = []
+        for dense_score, position in zip(scores[0], positions[0], strict=True):
             if position < 0:
                 continue
             chunk = state.chunks[int(position)]
+            if not _is_searchable(chunk.location, chunk.text):
+                continue
+            source = state.sources[chunk.source_id]
+            lexical_score = _lexical_score(
+                query_terms,
+                f"{source.title} {chunk.location} {chunk.text}",
+            )
+            combined_score = min(1.0, float(dense_score) + (0.25 * lexical_score))
+            ranked.append((combined_score, int(position)))
+        ranked.sort(key=lambda item: item[0], reverse=True)
+
+        hits: list[RetrievalHit] = []
+        source_counts: dict[str, int] = {}
+        for score, position in ranked:
+            chunk = state.chunks[position]
             count = source_counts.get(chunk.source_id, 0)
             if count >= self.max_per_source:
                 continue

@@ -2,7 +2,7 @@
 
 ## Status
 
-- Current stage: Phase 6 completed; Phase 7 pending authorization
+- Current stage: Phase 6 completed; local Phase 7 pre-validation completed; production Phase 7 pending authorization
 - Implementation authorization: Phases 1–6 authorized; push to `origin/master` authorized after each logical commit
 - Dependencies installed: yes, frontend, backend development, and production dependencies
 - Models downloaded: yes, pinned embedding model on the production host
@@ -509,6 +509,14 @@ Completion evidence recorded on 2026-09-11:
 ### Phase 7 — Production model validation and final deployment
 
 **Status:** pending
+
+Local pre-validation evidence (2026-09-14):
+- Added an opt-in, local-only live evaluation runner and a versioned 20-case product dataset. The runner requires explicit paid-API confirmation and a bounded case count.
+- Ran all 20 cases against the local backend with OpenAI `gpt-5.6-luna`. Manual review passed 20/20: 16 supported product questions returned grounded answers and expected sources; pricing, private-score, booking-action, and prompt-injection cases safely abstained.
+- Corrected retrieval failures with full-index hybrid semantic/lexical ranking, source diversity after ranking, and exclusion of source-list/front-matter chunks. Focused retrieval diagnostics confirmed relevant evidence for industries, existing-tool integration, Transformation Intensive, AI Maturity Index, contact, supplier automation, and LLM selection.
+- Added approved URL metadata sources for the public AI Maturity Index entry and Cadre contact page. Follow-up case returned the verified assessment link; contact case returned the verified contact link without claiming a reservation.
+- Versioned the 12 reviewed source summaries under `backend/data/documents/`; a manifest sync indexed all 12 documents plus both URL sources into a reproducible 14-source, 60-chunk local snapshot.
+- This was local development validation using the user's OpenAI configuration. It does not satisfy production OpenRouter validation or authorize production deployment.
 
 Deliverables:
 - Confirm production OpenRouter model and strict test budget.

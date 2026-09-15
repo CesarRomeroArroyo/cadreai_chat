@@ -1,1 +1,7 @@
-sources: []
+sources:
+  - id: cadre-contact
+    title: Contact Cadre AI
+    url: https://cadre.ai/contact
+  - id: cadre-ai-maturity-index
+    title: Cadre AI Maturity Index
+    url: https://portal.gocadre.ai/ai-maturity-index

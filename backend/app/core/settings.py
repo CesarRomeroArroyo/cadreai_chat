@@ -27,7 +27,9 @@ class Settings(BaseSettings):
     embedding_cpu_threads: int = Field(default=1, ge=1, le=4)
     chunk_tokens: int = Field(default=384, ge=1)
     chunk_overlap: int = Field(default=64, ge=0)
-    knowledge_allowed_hosts: list[str] = Field(default_factory=lambda: ["cadreai.com"])
+    knowledge_allowed_hosts: list[str] = Field(
+        default_factory=lambda: ["cadreai.com", "cadre.ai", "portal.gocadre.ai"]
+    )
     knowledge_max_file_bytes: int = Field(default=5 * 1024 * 1024, ge=1)
     knowledge_max_url_bytes: int = Field(default=5 * 1024 * 1024, ge=1)
     knowledge_url_timeout_seconds: float = Field(default=15.0, gt=0, le=120)

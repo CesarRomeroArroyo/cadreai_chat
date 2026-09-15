@@ -65,9 +65,9 @@ def test_builds_deterministic_follow_up_query_from_recent_history() -> None:
         recent_history_messages=2,
     )
 
-    assert "Old topic" not in query
+    assert "We discussed" not in query
     assert query == (
-        "Previous assistant: We discussed the AI Maturity Index.\n"
+        "Previous user: Old topic\n"
         "Previous user: Does it produce a score?\n"
         "Current question: How do I get started?"
     )

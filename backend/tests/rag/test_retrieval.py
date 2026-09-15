@@ -105,6 +105,48 @@ def test_retrieval_enforces_source_diversity(tmp_path: Path) -> None:
     assert hits[0].score >= hits[1].score
 
 
+def test_retrieval_uses_lexical_signal_across_full_exact_index(tmp_path: Path) -> None:
+    service = make_service(tmp_path)
+    distractors = [
+        service.prepare_file(
+            filename=f"general-{index}.txt",
+            content_type="text/plain",
+            data=b"AI strategy and security planning guidance",
+        )
+        for index in range(7)
+    ]
+    relevant = service.prepare_file(
+        filename="construction.txt",
+        content_type="text/plain",
+        data=b"Construction teams use automated quantity estimating and project monitoring",
+    )
+    service.upsert([*distractors, relevant])
+    retriever = RetrievalService(service, top_k=2, max_per_source=1)
+
+    hits = retriever.retrieve("Do you work with construction companies?")
+
+    assert hits[0].source.source_id == relevant.source_id
+
+
+def test_retrieval_skips_source_list_sections(tmp_path: Path) -> None:
+    service = make_service(tmp_path)
+    source = service.prepare_file(
+        filename="source-list.md",
+        content_type="text/markdown",
+        data=(
+            b"## Official sources\nhttps://example.com/security\n\n"
+            b"## Security\nControlled AI access"
+        ),
+    )
+    service.upsert([source])
+    retriever = RetrievalService(service, top_k=2, max_per_source=2)
+
+    hits = retriever.retrieve("security")
+
+    assert hits
+    assert all(hit.chunk.location != "Official sources" for hit in hits)
+
+
 def test_incompatible_snapshot_is_not_ready(tmp_path: Path) -> None:
     store = SnapshotStore(tmp_path / "index")
     original = KnowledgeService(
