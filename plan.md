@@ -518,6 +518,12 @@ Local pre-validation evidence (2026-09-14):
 - Versioned the 12 reviewed source summaries under `backend/data/documents/`; a manifest sync indexed all 12 documents plus both URL sources into a reproducible 14-source, 60-chunk local snapshot.
 - This was local development validation using the user's OpenAI configuration. It does not satisfy production OpenRouter validation or authorize production deployment.
 
+Production preparation evidence (2026-09-15):
+- OpenRouter's live model catalog lists `openai/gpt-5.6-luna` at USD 0.20 per million input tokens and USD 1.20 per million output tokens, with `max_tokens` and `max_completion_tokens` support and no temperature parameter.
+- Extended the provider adapter to validate OpenRouter's official `/api/v1` base path, omit unsupported temperature for provider-prefixed modern OpenAI models, retain OpenRouter's `max_tokens`, and preserve `system` messages through OpenRouter. Mock-transport coverage verifies the exact payload without a paid call.
+- Audited the existing Droplet configuration without exposing secrets: `cadre-ai.service` and Nginx are active, production provider remains disabled, OpenRouter base URL is present, model remains a placeholder, and a provider key is present. No production configuration was changed.
+- Proposed production choice: `openai/gpt-5.6-luna`, matching the successful local 20-case validation. Proposed live validation: 10 representative cases, 400 output tokens per call, no web search or tools, one bounded transient retry, and a USD 0.05 maximum expected spend. Explicit user approval remains required.
+
 Deliverables:
 - Confirm production OpenRouter model and strict test budget.
 - Run a small explicitly authorized real-provider evaluation.

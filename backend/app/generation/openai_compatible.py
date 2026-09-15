@@ -21,6 +21,10 @@ EXPECTED_HOSTS: dict[ProviderName, str] = {
     "openai": "api.openai.com",
     "openrouter": "openrouter.ai",
 }
+EXPECTED_PATHS: dict[ProviderName, str] = {
+    "openai": "/v1",
+    "openrouter": "/api/v1",
+}
 MODERN_OPENAI_MODEL_PREFIXES = ("gpt-5", "gpt-6", "o1", "o3", "o4", "codex")
 
 
@@ -36,7 +40,7 @@ def validate_provider_configuration(
         or parsed.port not in {None, 443}
         or parsed.query
         or parsed.fragment
-        or parsed.path.rstrip("/") != "/v1"
+        or parsed.path.rstrip("/") != EXPECTED_PATHS[provider]
     ):
         raise ValueError(f"Invalid {provider} base URL")
     if len(api_key) < 8:
@@ -68,9 +72,8 @@ class OpenAICompatibleProvider:
         )
         self.provider = provider
         self.model = model
-        self._uses_modern_openai_parameters = provider == "openai" and model.startswith(
-            MODERN_OPENAI_MODEL_PREFIXES
-        )
+        provider_model = model.rsplit("/", maxsplit=1)[-1]
+        self._uses_modern_model_parameters = provider_model.startswith(MODERN_OPENAI_MODEL_PREFIXES)
         self.max_output_tokens = max_output_tokens
         self.temperature = temperature
         self.retries = retries
@@ -88,7 +91,9 @@ class OpenAICompatibleProvider:
                 {
                     "role": (
                         "developer"
-                        if self._uses_modern_openai_parameters and message.role == "system"
+                        if self.provider == "openai"
+                        and self._uses_modern_model_parameters
+                        and message.role == "system"
                         else message.role
                     ),
                     "content": message.content,
@@ -101,7 +106,7 @@ class OpenAICompatibleProvider:
             payload["max_completion_tokens"] = self.max_output_tokens
         else:
             payload["max_tokens"] = self.max_output_tokens
-        if not self._uses_modern_openai_parameters:
+        if not self._uses_modern_model_parameters:
             payload["temperature"] = self.temperature
         for attempt in range(self.retries + 1):
             try:

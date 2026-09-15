@@ -13,16 +13,21 @@ from app.generation.errors import (
     ProviderUnavailableError,
 )
 from app.generation.models import GenerationMessage
-from app.generation.openai_compatible import OpenAICompatibleProvider
+from app.generation.openai_compatible import OpenAICompatibleProvider, ProviderName
 
 
 def make_provider(
-    handler: Callable[[httpx.Request], httpx.Response], *, model: str = "test-model"
+    handler: Callable[[httpx.Request], httpx.Response],
+    *,
+    model: str = "test-model",
+    provider: ProviderName = "openai",
 ) -> OpenAICompatibleProvider:
     client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
     return OpenAICompatibleProvider(
-        provider="openai",
-        base_url="https://api.openai.com/v1",
+        provider=provider,
+        base_url=(
+            "https://api.openai.com/v1" if provider == "openai" else "https://openrouter.ai/api/v1"
+        ),
         api_key="test-api-key",
         model=model,
         timeout_seconds=1,
@@ -61,6 +66,42 @@ async def test_generates_with_bounded_openai_compatible_payload() -> None:
     assert result.content == "Verified answer"
     assert result.usage is not None
     assert result.usage.total_tokens == 13
+    await provider.aclose()
+
+
+@pytest.mark.anyio
+async def test_uses_openrouter_payload_for_modern_openai_model() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        payload = __import__("json").loads(request.content)
+        assert payload == {
+            "model": "openai/gpt-5.6-luna",
+            "messages": [
+                {"role": "system", "content": "Grounding rules"},
+                {"role": "user", "content": "Question"},
+            ],
+            "max_tokens": 100,
+            "stream": False,
+        }
+        return httpx.Response(
+            200,
+            request=request,
+            json={"choices": [{"message": {"content": "Verified answer"}}]},
+        )
+
+    provider = make_provider(
+        handler,
+        model="openai/gpt-5.6-luna",
+        provider="openrouter",
+    )
+
+    result = await provider.generate(
+        [
+            GenerationMessage(role="system", content="Grounding rules"),
+            GenerationMessage(role="user", content="Question"),
+        ]
+    )
+
+    assert result.content == "Verified answer"
     await provider.aclose()
 
 
